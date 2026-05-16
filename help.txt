@@ -3,3 +3,6 @@ how to install
   how to update or unistall
 (1)reg delete "HKCU\Software\Microsoft\Command Processor" /v AutoRun /f --if want to delete
   (2)reg add "HKCU\Software\Microsoft\Command Processor" /v AutoRun /t REG_SZ /f /d "title GLITCH COMPANY CMD (TM) & color 0A & prompt $G & powershell -ExecutionPolicy Bypass -NoProfile -Command \"Invoke-WebRequest 'https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt' -OutFile $env:TEMP\glitch_boot.ps1; powershell -ExecutionPolicy Bypass -File $env:TEMP\glitch_boot.ps1\"" --for update
+NOTE:
+
+PLEASE RUN IT AS ADMIN
