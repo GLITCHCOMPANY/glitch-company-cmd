@@ -1,4 +1,4 @@
-$GLITCH_VERSION="1.0.6"
+$GLITCH_VERSION="1.0.7"
 
 Write-Host "[UPDATED SUCCESSFULLY]"
 Write-Host "=========================="
