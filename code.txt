@@ -5,21 +5,10 @@ Write-Host "GLITCH COMPANY CMD"
 Write-Host "VERSION $GLITCH_VERSION"
 Write-Host "=========================="
 
-function glitch_update {
-
-    $tmp=$env:TEMP + "\glitch_update.ps1"
-
-    Invoke-WebRequest `
-    -Uri "https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt" `
-    -OutFile $tmp
-
-    powershell -ExecutionPolicy Bypass -File $tmp
-}
-
 doskey ai=ollama run phi3:mini $*
 
 doskey download=winget install -e --id $*
 
-doskey update=powershell -ExecutionPolicy Bypass -Command glitch_update
+doskey update=powershell -ExecutionPolicy Bypass -NoProfile -Command "Invoke-WebRequest 'https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt' -OutFile $env:TEMP\glitch_update.ps1; powershell -ExecutionPolicy Bypass -File $env:TEMP\glitch_update.ps1"
 
 Write-Host "SYSTEM LOADED"
