@@ -1,5 +1,6 @@
 $GLITCH_VERSION="1.0.6"
 
+Write-Host "[UPDATED SUCCESSFULLY]"
 Write-Host "=========================="
 Write-Host "GLITCH COMPANY CMD"
 Write-Host "VERSION $GLITCH_VERSION"
@@ -16,6 +17,15 @@ Project:
 - supports GUI
 - supports search
 - supports copycode
+
+Commands:
+ai
+gui
+search
+copycode
+update
+download
+help
 
 Always answer short and technical.
 "@
@@ -125,9 +135,8 @@ doskey copycode=powershell -ExecutionPolicy Bypass -Command "Start-GlitchCopyCod
 
 doskey download=winget install -e --id $*
 
-doskey update=powershell -ExecutionPolicy Bypass -NoProfile -Command "Invoke-WebRequest 'https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt' -OutFile $env:TEMP\glitch_update.ps1; powershell -ExecutionPolicy Bypass -File $env:TEMP\glitch_update.ps1"
+doskey update=powershell -ExecutionPolicy Bypass -NoProfile -Command "Invoke-WebRequest 'https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt' -OutFile $env:TEMP\glitch_update.ps1; . $env:TEMP\glitch_update.ps1"
 
-doskey help=echo COMMANDS: ai gui search copycode update download
+doskey help=echo ai gui search copycode update download
 
 Write-Host "SYSTEM LOADED..."
-Write-Host "$random"
