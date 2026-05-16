@@ -1,12 +1,13 @@
 $GLITCH_VERSION="1.0.0"
 
-echo ==========================
-echo GLITCH COMPANY CMD
-echo VERSION $GLITCH_VERSION
-echo ==========================
+Write-Host "=========================="
+Write-Host "GLITCH COMPANY CMD"
+Write-Host "VERSION $GLITCH_VERSION"
+Write-Host "=========================="
 
 doskey /ai=ollama run phi3:mini $*
 
 doskey /download=winget install -e --id $*
 
-echo SYSTEM LOADED
+Write-Host "SYSTEM LOADED"
+Write-Host "LOADING $GLITCH_VERSION"
