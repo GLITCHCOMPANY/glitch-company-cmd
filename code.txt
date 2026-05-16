@@ -5,6 +5,8 @@ echo GLITCH COMPANY CMD
 echo VERSION $GLITCH_VERSION
 echo ==========================
 
-doskey ai=ollama run phi3:mini $*
+doskey /ai=ollama run phi3:mini $*
+
+doskey /download=winget install -e --id $*
 
 echo SYSTEM LOADED
