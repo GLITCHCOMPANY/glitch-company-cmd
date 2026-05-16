@@ -1,4 +1,6 @@
-$GLITCH_VERSION="1.1.0"
+$GLITCH_VERSION="1.1.2"
+
+$GLITCH_SOUND=$true
 
 $isAdmin=(
     [Security.Principal.WindowsPrincipal]
@@ -19,8 +21,21 @@ if(-not $isAdmin){
     exit
 }
 
-[console]::beep(900,120)
-[console]::beep(1200,120)
+function Play-GlitchBeep {
+
+    param(
+        [int]$freq,
+        [int]$time
+    )
+
+    if($GLITCH_SOUND){
+
+        [console]::beep($freq,$time)
+    }
+}
+
+Play-GlitchBeep 900 120
+Play-GlitchBeep 1200 120
 
 Write-Host "=========================="
 Write-Host "GLITCH COMPANY CMD"
@@ -40,6 +55,7 @@ Project:
 - copycode
 - reload support
 - sound system
+- mute system
 - admin auto elevate
 
 Commands:
@@ -51,6 +67,8 @@ update
 reload
 music
 beep
+mute
+unmute
 download
 help
 
@@ -68,7 +86,7 @@ function Test-GlitchAuth {
 
     if($GLITCH_USERS -notcontains $user){
 
-        [console]::beep(300,400)
+        Play-GlitchBeep 300 400
 
         Write-Host "[ACCESS DENIED]"
         return $false
@@ -83,7 +101,7 @@ function Start-GlitchAI {
 
     if(!(Test-GlitchAuth)){ return }
 
-    [console]::beep(1000,80)
+    Play-GlitchBeep 1000 80
 
     ollama run phi3:mini "$GLITCH_CONTEXT User:$Prompt"
 }
@@ -121,7 +139,7 @@ function Start-GlitchGUI {
 
     $send.Add_Click({
 
-        [console]::beep(1200,50)
+        Play-GlitchBeep 1200 50
 
         $response=ollama run phi3:mini "$GLITCH_CONTEXT User:$($input.Text)"
 
@@ -142,7 +160,7 @@ function Start-GlitchSearch {
 
     param([string]$Query)
 
-    [console]::beep(800,60)
+    Play-GlitchBeep 800 60
 
     $url="https://duckduckgo.com/html/?q=$Query"
 
@@ -216,7 +234,7 @@ function Start-GlitchCopyCode {
 
     if(!(Test-GlitchAuth)){ return }
 
-    [console]::beep(1400,100)
+    Play-GlitchBeep 1400 100
 
     $response=ollama run phi3:mini "ONLY RETURN CODE. NO EXPLANATIONS. User:$Prompt"
 
@@ -227,7 +245,7 @@ function Start-GlitchCopyCode {
 
 function Start-GlitchReload {
 
-    [console]::beep(1500,100)
+    Play-GlitchBeep 1500 100
 
     $url="https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt?t=$(Get-Random)"
 
@@ -241,37 +259,59 @@ function Start-GlitchReload {
 
 function Start-GlitchMusic {
 
-    [console]::beep(600,150)
-    [console]::beep(800,150)
-    [console]::beep(1000,150)
-    [console]::beep(1200,300)
+    Play-GlitchBeep 600 150
+    Play-GlitchBeep 800 150
+    Play-GlitchBeep 1000 150
+    Play-GlitchBeep 1200 300
 }
 
 function Start-GlitchBeep {
 
     param([int]$freq)
 
-    [console]::beep($freq,200)
+    Play-GlitchBeep $freq 200
 }
 
-doskey ai=powershell -ExecutionPolicy Bypass -Command "Start-GlitchAI '$*'"
+function Start-GlitchMute {
 
-doskey gui=powershell -ExecutionPolicy Bypass -Command "Start-GlitchGUI"
+    $global:GLITCH_SOUND=$false
 
-doskey search=powershell -ExecutionPolicy Bypass -Command "Start-GlitchSearch '$*'"
+    Write-Host "[SOUND MUTED]"
+}
 
-doskey copycode=powershell -ExecutionPolicy Bypass -Command "Start-GlitchCopyCode '$*'"
+function Start-GlitchUnmute {
 
-doskey reload=powershell -ExecutionPolicy Bypass -Command "Start-GlitchReload"
+    $global:GLITCH_SOUND=$true
 
-doskey music=powershell -ExecutionPolicy Bypass -Command "Start-GlitchMusic"
+    Write-Host "[SOUND ENABLED]"
 
-doskey beep=powershell -ExecutionPolicy Bypass -Command "Start-GlitchBeep $*"
+    Play-GlitchBeep 1200 100
+}
+
+Copy-Item $MyInvocation.MyCommand.Path "$env:TEMP\glitch_runtime.ps1" -Force
+
+doskey ai=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchAI '$*'"
+
+doskey gui=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchGUI"
+
+doskey search=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchSearch '$*'"
+
+doskey copycode=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchCopyCode '$*'"
+
+doskey reload=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchReload"
+
+doskey music=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchMusic"
+
+doskey beep=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchBeep $*"
+
+doskey mute=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchMute"
+
+doskey unmute=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchUnmute"
 
 doskey download=winget install -e --id $*
 
 doskey update=powershell -ExecutionPolicy Bypass -NoProfile -Command "$u='https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt?t='+(Get-Random); Invoke-WebRequest $u -UseBasicParsing -OutFile $env:TEMP\glitch_update.ps1; . $env:TEMP\glitch_update.ps1; Write-Host '[UPDATED SUCCESSFULLY]'"
 
-doskey help=echo ai gui search copycode reload music beep update download
+doskey help=echo ai gui search copycode reload music beep mute unmute update download
 
 Write-Host "SYSTEM LOADED..."
