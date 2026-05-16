@@ -9,10 +9,6 @@ doskey /ai=ollama run phi3:mini $*
 
 doskey /download=winget install -e --id $*
 
-doskey /update=powershell -Command "$ver='$*'; Write-Host '[UPDATING TO VERSION]' $ver; $url='https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt'; $code=(Invoke-WebRequest $url).Content; Invoke-Expression $code"
-
-doskey /autoupdate=powershell -Command "$remote=(Invoke-WebRequest 'https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt').Content; if($remote -match '\$GLITCH_VERSION=\"([^\"]+)\"'){ $rv=$matches[1]; if($rv -ne '$GLITCH_VERSION'){ Write-Host '[AUTO UPDATE]' $rv; Invoke-Expression $remote } else { Write-Host '[NO UPDATE FOUND]' } }"
+doskey /update=powershell -Command "$code=(Invoke-WebRequest 'https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt').Content; Invoke-Expression $code"
 
 Write-Host "SYSTEM LOADED"
-
-powershell -WindowStyle Hidden -Command "$remote=(Invoke-WebRequest 'https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt').Content; if($remote -match '\$GLITCH_VERSION=\"([^\"]+)\"'){ $rv=$matches[1]; if($rv -ne '$GLITCH_VERSION'){ Invoke-Expression $remote } }"
