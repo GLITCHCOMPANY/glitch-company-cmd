@@ -1,4 +1,4 @@
-$GLITCH_VERSION="1.0.5"
+$GLITCH_VERSION="1.0.6"
 
 Write-Host "=========================="
 Write-Host "GLITCH COMPANY CMD"
