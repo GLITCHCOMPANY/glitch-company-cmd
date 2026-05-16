@@ -4,11 +4,36 @@ Write-Host "=========================="
 Write-Host "GLITCH COMPANY CMD"
 Write-Host "VERSION $GLITCH_VERSION"
 Write-Host "=========================="
+Write-Host "for more info use the comand ai,or use https://github.com/GLITCHCOMPANY/glitch-company-cmd/blob/main/help.txt"
+$GLITCH_CONTEXT=@"
+You are GLITCH COMPANY CMD AI.
 
-doskey ai=ollama run phi3:mini $*
+Project:
+- local AI terminal
+- runs inside Windows CMD
+- uses Ollama
+- auto updates from GitHub
+- commands:
+  ai
+  update
+  download
+
+How updates work:
+1. edit code.txt on GitHub
+2. change GLITCH_VERSION
+3. run update in CMD
+4. CMD downloads latest version automatically
+
+Never explain unrelated things.
+Always answer short and technical.
+"@
+
+doskey ai=ollama run phi3:mini "$GLITCH_CONTEXT User: $*"
 
 doskey download=winget install -e --id $*
 
 doskey update=powershell -ExecutionPolicy Bypass -NoProfile -Command "Invoke-WebRequest 'https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt' -OutFile $env:TEMP\glitch_update.ps1; powershell -ExecutionPolicy Bypass -File $env:TEMP\glitch_update.ps1"
+
+doskey help=echo COMMANDS: ai ^| update ^| download
 
 Write-Host "SYSTEM LOADED"
