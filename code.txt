@@ -1,4 +1,23 @@
-$GLITCH_VERSION="1.0.9"
+$GLITCH_VERSION="1.1.0"
+
+$isAdmin=(
+    [Security.Principal.WindowsPrincipal]
+    [Security.Principal.WindowsIdentity]::GetCurrent()
+).IsInRole(
+    [Security.Principal.WindowsBuiltInRole]::Administrator
+)
+
+if(-not $isAdmin){
+
+    Write-Host "[ADMIN REQUIRED]"
+    Write-Host "REQUESTING ELEVATION..."
+
+    Start-Process powershell `
+    -Verb RunAs `
+    -ArgumentList "-ExecutionPolicy Bypass -NoExit -Command `"Invoke-WebRequest 'https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt?t=$(Get-Random)' -OutFile `$env:TEMP\glitch_admin.ps1; . `$env:TEMP\glitch_admin.ps1`""
+
+    exit
+}
 
 [console]::beep(900,120)
 [console]::beep(1200,120)
@@ -21,6 +40,7 @@ Project:
 - copycode
 - reload support
 - sound system
+- admin auto elevate
 
 Commands:
 ai
@@ -209,8 +229,11 @@ function Start-GlitchReload {
 
     [console]::beep(1500,100)
 
+    $url="https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt?t=$(Get-Random)"
+
     Invoke-WebRequest `
-    'https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt' `
+    $url `
+    -UseBasicParsing `
     -OutFile "$env:TEMP\glitch_reload.ps1"
 
     . "$env:TEMP\glitch_reload.ps1"
@@ -247,7 +270,7 @@ doskey beep=powershell -ExecutionPolicy Bypass -Command "Start-GlitchBeep $*"
 
 doskey download=winget install -e --id $*
 
-doskey update=powershell -ExecutionPolicy Bypass -NoProfile -Command "Invoke-WebRequest 'https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt' -OutFile $env:TEMP\glitch_update.ps1; . $env:TEMP\glitch_update.ps1; Write-Host '[UPDATED SUCCESSFULLY]'"
+doskey update=powershell -ExecutionPolicy Bypass -NoProfile -Command "$u='https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt?t='+(Get-Random); Invoke-WebRequest $u -UseBasicParsing -OutFile $env:TEMP\glitch_update.ps1; . $env:TEMP\glitch_update.ps1; Write-Host '[UPDATED SUCCESSFULLY]'"
 
 doskey help=echo ai gui search copycode reload music beep update download
 
