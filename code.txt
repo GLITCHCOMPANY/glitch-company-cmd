@@ -1,6 +1,6 @@
-$GLITCH_VERSION="1.1.2"
+$GLITCH_VERSION="1.1.3"
 
-$GLITCH_SOUND=$true
+$global:GLITCH_SOUND=$true
 
 $identity=[Security.Principal.WindowsIdentity]::GetCurrent()
 
@@ -165,7 +165,15 @@ function Start-GlitchSearch {
 
     $url="https://duckduckgo.com/html/?q=$Query"
 
-    $html=(Invoke-WebRequest $url).Content
+    try{
+
+        $html=(Invoke-WebRequest $url -UseBasicParsing).Content
+
+    }catch{
+
+        Write-Host "[SEARCH FAILED]"
+        return
+    }
 
     $matches=[regex]::Matches(
         $html,
@@ -212,7 +220,7 @@ function Start-GlitchSearch {
 
         try{
 
-            $site=(Invoke-WebRequest $target).Content
+            $site=(Invoke-WebRequest $target -UseBasicParsing).Content
 
             $text=$site -replace '<script[\s\S]*?</script>',''
             $text=$text -replace '<style[\s\S]*?</style>',''
@@ -311,7 +319,7 @@ doskey unmute=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TE
 
 doskey download=winget install -e --id $*
 
-doskey update=powershell -ExecutionPolicy Bypass -NoProfile -Command "$u='https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt?t='+(Get-Random); Invoke-WebRequest $u -UseBasicParsing -OutFile $env:TEMP\glitch_update.ps1; . $env:TEMP\glitch_update.ps1; Write-Host '[UPDATED SUCCESSFULLY]'"
+doskey update=powershell -ExecutionPolicy Bypass -NoProfile -Command "& { $u='https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt?t=' + (Get-Random); Invoke-WebRequest $u -UseBasicParsing -OutFile \"$env:TEMP\glitch_update.ps1\"; . \"$env:TEMP\glitch_update.ps1\"; Write-Host '[UPDATED SUCCESSFULLY]' }"
 
 doskey help=echo ai gui search copycode reload music beep mute unmute update download
 
