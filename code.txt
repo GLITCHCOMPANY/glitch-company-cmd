@@ -127,6 +127,7 @@ doskey download=winget install -e --id $*
 
 doskey update=powershell -ExecutionPolicy Bypass -NoProfile -Command "Invoke-WebRequest 'https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt' -OutFile $env:TEMP\glitch_update.ps1; powershell -ExecutionPolicy Bypass -File $env:TEMP\glitch_update.ps1"
 
-doskey help=echo COMMANDS: ai ^| gui ^| search ^| copycode ^| update ^| download
+doskey help=echo COMMANDS: ai, gui,search,copycode,update,download
 
-Write-Host "SYSTEM LOADED"
+Write-Host "SYSTEM LOADED..."
+Write-Host "$random$"
