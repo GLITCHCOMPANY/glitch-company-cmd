@@ -5,10 +5,10 @@ Write-Host "GLITCH COMPANY CMD"
 Write-Host "VERSION $GLITCH_VERSION"
 Write-Host "=========================="
 
-doskey /ai=ollama run phi3:mini $*
+doskey ai=ollama run phi3:mini $*
 
-doskey /download=winget install -e --id $*
+doskey download=winget install -e --id $*
 
-doskey /update=powershell -Command "$code=(Invoke-WebRequest 'https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt').Content; Invoke-Expression $code"
+doskey update=powershell -Command "$code=(Invoke-WebRequest 'https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt').Content; Invoke-Expression $code"
 
 Write-Host "SYSTEM LOADED"
