@@ -2,10 +2,11 @@ $GLITCH_VERSION="1.1.2"
 
 $GLITCH_SOUND=$true
 
-$isAdmin=(
-    [Security.Principal.WindowsPrincipal]
-    [Security.Principal.WindowsIdentity]::GetCurrent()
-).IsInRole(
+$identity=[Security.Principal.WindowsIdentity]::GetCurrent()
+
+$principal=New-Object Security.Principal.WindowsPrincipal($identity)
+
+$isAdmin=$principal.IsInRole(
     [Security.Principal.WindowsBuiltInRole]::Administrator
 )
 
@@ -28,7 +29,7 @@ function Play-GlitchBeep {
         [int]$time
     )
 
-    if($GLITCH_SOUND){
+    if($global:GLITCH_SOUND){
 
         [console]::beep($freq,$time)
     }
