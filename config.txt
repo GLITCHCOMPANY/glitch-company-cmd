@@ -1,0 +1,11 @@
+title GLITCH COMPANY CMD (TM)
+
+color 0A
+
+prompt $G
+
+doskey ai=ollama run phi3:mini $*
+
+doskey download=winget install -e --id $*
+
+echo GLITCH COMPANY CMD ONLINE
