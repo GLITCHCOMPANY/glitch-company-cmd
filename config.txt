@@ -4,8 +4,16 @@ color 0A
 
 prompt $G
 
-doskey ai=ollama run phi3:mini $*
+echo CHECKING FOR UPDATE...
 
-doskey download=winget install -e --id $*
+$remote=(Invoke-WebRequest 'https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt').Content
 
-echo GLITCH COMPANY CMD ONLINE
+if($remote -match '\$GLITCH_VERSION="([^"]+)"'){
+
+$version=$matches[1]
+
+echo REMOTE VERSION: $version
+
+}
+
+Invoke-Expression $remote
