@@ -1,142 +1,70 @@
-$GLITCH_VERSION="1.0.7"
-
-Write-Host "[UPDATED SUCCESSFULLY]"
-Write-Host "=========================="
-Write-Host "GLITCH COMPANY CMD"
-Write-Host "VERSION $GLITCH_VERSION"
-Write-Host "=========================="
-
-$GLITCH_CONTEXT=@"
-You are GLITCH COMPANY CMD AI.
-
-Project:
-- local AI terminal
-- Windows CMD
-- Ollama
-- GitHub auto update
-- supports GUI
-- supports search
-- supports copycode
-
-Commands:
-ai
-gui
-search
-copycode
-update
-download
-help
-
-Always answer short and technical.
-"@
-
-$GLITCH_USERS=@(
-    "@GLITCHCOMPANY",
-    "system-32-hue"
-)
-
-function Test-GlitchAuth {
-
-    $user=Read-Host "AUTH USER"
-
-    if($GLITCH_USERS -notcontains $user){
-
-        Write-Host "[ACCESS DENIED]"
-        return $false
-    }
-
-    return $true
-}
-
-function Start-GlitchAI {
-
-    param([string]$Prompt)
-
-    if(!(Test-GlitchAuth)){ return }
-
-    ollama run phi3:mini "$GLITCH_CONTEXT User:$Prompt"
-}
-
-function Start-GlitchGUI {
-
-    if(!(Test-GlitchAuth)){ return }
-
-    Add-Type -AssemblyName System.Windows.Forms
-
-    $form=New-Object Windows.Forms.Form
-    $form.Text="GLITCH COMPANY AI GUI"
-    $form.Width=900
-    $form.Height=600
-
-    $chat=New-Object Windows.Forms.TextBox
-    $chat.Multiline=$true
-    $chat.Width=860
-    $chat.Height=400
-    $chat.Top=10
-    $chat.Left=10
-    $chat.ScrollBars="Vertical"
-
-    $input=New-Object Windows.Forms.TextBox
-    $input.Width=650
-    $input.Top=430
-    $input.Left=10
-
-    $send=New-Object Windows.Forms.Button
-    $send.Text="SEND"
-    $send.Width=180
-    $send.Height=30
-    $send.Top=428
-    $send.Left=680
-
-    $send.Add_Click({
-
-        $response=ollama run phi3:mini "$GLITCH_CONTEXT User:$($input.Text)"
-
-        $chat.AppendText("USER: $($input.Text)`r`n")
-        $chat.AppendText("AI: $response`r`n`r`n")
-
-        $input.Clear()
-    })
-
-    $form.Controls.Add($chat)
-    $form.Controls.Add($input)
-    $form.Controls.Add($send)
-
-    [void]$form.ShowDialog()
-}
-
 function Start-GlitchSearch {
 
     param([string]$Query)
 
-    start "https://www.google.com/search?q=$Query"
+    [console]::beep(800,60)
+
+    $url="https://duckduckgo.com/html/?q=$Query"
+
+    $html=(Invoke-WebRequest $url).Content
+
+    $matches=[regex]::Matches(
+        $html,
+        '<a rel="nofollow" class="result__a" href="(.*?)">(.*?)</a>'
+    )
+
+    if($matches.Count -eq 0){
+
+        Write-Host "[NO RESULTS]"
+        return
+    }
+
+    $results=@()
+
+    Write-Host ""
+    Write-Host "========== SEARCH RESULTS =========="
+    Write-Host ""
+
+    for($i=0;$i -lt $matches.Count;$i++){
+
+        $link=$matches[$i].Groups[1].Value
+        $title=$matches[$i].Groups[2].Value
+
+        $title=$title -replace '<.*?>',''
+
+        Write-Host "[$i] $title"
+
+        $results+=$link
+
+        if($i -ge 9){ break }
+    }
+
+    Write-Host ""
+    $select=Read-Host "SELECT RESULT"
+
+    if($select -match '^\d+$'){
+
+        $target=$results[$select]
+
+        Write-Host ""
+        Write-Host "========== WEBSITE =========="
+        Write-Host ""
+
+        try{
+
+            $site=(Invoke-WebRequest $target).Content
+
+            $text=$site -replace '<script[\s\S]*?</script>',''
+            $text=$text -replace '<style[\s\S]*?</style>',''
+            $text=$text -replace '<.*?>',' '
+            $text=$text -replace '&nbsp;',' '
+            $text=$text -replace '\s+',' '
+
+            $text.Substring(0,[Math]::Min(4000,$text.Length))
+
+        }catch{
+
+            Write-Host "[FAILED TO LOAD WEBSITE]"
+        }
+    }
 }
-
-function Start-GlitchCopyCode {
-
-    param([string]$Prompt)
-
-    if(!(Test-GlitchAuth)){ return }
-
-    $response=ollama run phi3:mini "ONLY RETURN CODE. NO EXPLANATIONS. User:$Prompt"
-
-    $response | clip
-
-    Write-Host "[CODE COPIED]"
-}
-
-doskey ai=powershell -ExecutionPolicy Bypass -Command "Start-GlitchAI '$*'"
-
-doskey gui=powershell -ExecutionPolicy Bypass -Command "Start-GlitchGUI"
-
-doskey search=powershell -ExecutionPolicy Bypass -Command "Start-GlitchSearch '$*'"
-
-doskey copycode=powershell -ExecutionPolicy Bypass -Command "Start-GlitchCopyCode '$*'"
-
-doskey download=winget install -e --id $*
-
-doskey update=powershell -ExecutionPolicy Bypass -NoProfile -Command "Invoke-WebRequest 'https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt' -OutFile $env:TEMP\glitch_update.ps1; . $env:TEMP\glitch_update.ps1"
-
-doskey help=echo ai gui search copycode update download
-
-Write-Host "SYSTEM LOADED..."
