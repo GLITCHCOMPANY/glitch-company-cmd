@@ -7,8 +7,4 @@ echo ==========================
 
 doskey ai=ollama run phi3:mini $*
 
-doskey download=winget install -e --id $*
-
-doskey calc=start calc
-
 echo SYSTEM LOADED
