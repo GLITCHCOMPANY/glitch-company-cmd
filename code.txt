@@ -104,7 +104,7 @@ function Show-GlitchRandomMessage {
             $msg=Get-Random $clean
 
             Write-Host ""
-            Write-Host "[RANDOM]"
+            Write-Host "RANDOM WORD OF THE DAY!: "
             Write-Host $msg
             Write-Host ""
         }
@@ -635,6 +635,8 @@ doskey unmute=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TE
 doskey update=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchUpdate '$*'"
 
 doskey download=winget install -e --id $*
+
+doskey unistall=reg delete "HKCU\Software\Microsoft\Command Processor" /v AutoRun /f
 
 doskey help=echo ai gui search chat copycode reload music beep mute unmute update download
 
