@@ -1,4 +1,4 @@
-$GLITCH_VERSION="1.1.8"
+$GLITCH_VERSION="1.1.7"
 
 # NEXT VERSION SYSTEM
 $splitVersion=$GLITCH_VERSION.Split(".")
@@ -366,7 +366,7 @@ doskey unmute=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TE
 
 doskey download=winget install -e --id $*
 
-doskey update=powershell -ExecutionPolicy Bypass -NoProfile -Command "& { `$next='$versionnext'; `$temp=[System.IO.Path]::Combine($env:TEMP,'glitch_update.ps1'); `$url='https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt?v=' + `$next; Invoke-WebRequest `$url -UseBasicParsing -OutFile `$temp; . `$temp; Write-Host '[UPDATED TO VERSION $versionnext]' }"
+doskey update=powershell -ExecutionPolicy Bypass -NoProfile -Command "& { `$next='$versionnext'; `$temp=`$env:TEMP + '\glitch_update.ps1'; `$url='https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt?v=' + `$next; Invoke-WebRequest `$url -UseBasicParsing -OutFile `$temp; . `$temp; Write-Host ('[UPDATED TO VERSION ' + `$next + ']') }"
 
 doskey help=echo ai gui search copycode reload music beep mute unmute update download
 
