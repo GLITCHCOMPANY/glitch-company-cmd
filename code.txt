@@ -1,4 +1,4 @@
-$GLITCH_VERSION="1.2.2"
+$GLITCH_VERSION="1.2.4"
 
 $ipoopedmypants="π"
 
