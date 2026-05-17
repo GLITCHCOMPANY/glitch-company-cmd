@@ -1,4 +1,4 @@
-$GLITCH_VERSION="1.1.4"
+$GLITCH_VERSION="1.1.6"
 
 $global:GLITCH_SOUND=$true
 
@@ -52,7 +52,7 @@ Project:
 - Ollama
 - GitHub auto update
 - GUI
-- search engine
+- terminal search engine
 - copycode
 - reload support
 - sound system
@@ -165,18 +165,91 @@ function Start-GlitchSearch {
 
     try{
 
-        $searchUrl="https://duckduckgo.com/html/?q=$Query"
+        $url="https://duckduckgo.com/html/?q=$Query"
 
-        Start-Process $searchUrl
-
-        Write-Host ""
-        Write-Host "[SEARCH OPENED]"
-        Write-Host $searchUrl
-        Write-Host ""
+        $html=(Invoke-WebRequest $url -UseBasicParsing).Content
 
     }catch{
 
         Write-Host "[SEARCH FAILED]"
+        return
+    }
+
+    $matches=[regex]::Matches(
+        $html,
+        '<a rel="nofollow" class="result__a" href="(.*?)">(.*?)</a>'
+    )
+
+    if($matches.Count -eq 0){
+
+        Write-Host "[NO RESULTS]"
+        return
+    }
+
+    $results=@()
+
+    Write-Host ""
+    Write-Host "========== SEARCH RESULTS =========="
+    Write-Host ""
+
+    for($i=0;$i -lt $matches.Count;$i++){
+
+        $title=$matches[$i].Groups[2].Value
+        $link=$matches[$i].Groups[1].Value
+
+        $title=$title -replace '<.*?>',''
+
+        Write-Host "[$i]"
+        Write-Host "$title"
+        Write-Host ""
+
+        $results+=$link
+
+        if($i -ge 9){
+
+            break
+        }
+    }
+
+    Write-Host ""
+
+    $choice=Read-Host "SELECT RESULT"
+
+    if($choice -notmatch '^\d+$'){
+
+        return
+    }
+
+    $index=[int]$choice
+
+    if($index -ge $results.Count){
+
+        return
+    }
+
+    $target=$results[$index]
+
+    Write-Host ""
+    Write-Host "========== WEBSITE CONTENT =========="
+    Write-Host ""
+
+    try{
+
+        $site=(Invoke-WebRequest $target -UseBasicParsing).Content
+
+        $site=$site -replace '<script[\s\S]*?</script>',''
+        $site=$site -replace '<style[\s\S]*?</style>',''
+        $site=$site -replace '<.*?>',' '
+        $site=$site -replace '&nbsp;',' '
+        $site=$site -replace '\s+',' '
+
+        $max=[Math]::Min(8000,$site.Length)
+
+        Write-Host $site.Substring(0,$max)
+
+    }catch{
+
+        Write-Host "[FAILED TO LOAD WEBSITE]"
     }
 }
 
