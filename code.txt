@@ -18,9 +18,9 @@ $global:GLITCH_SOUND=$false
 
 $global:GLITCH_CHAT_ID="GLITCH-" + (Get-Random -Minimum 1000 -Maximum 9999)
 
-$GLITCH_ERROR_LOG_URL="https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/ERROR_LOGS"
-
 $GLITCH_RANDOM_URL="https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/random"
+
+$GLITCH_ERROR_FILE="$env:TEMP\glitch_error_logs.txt"
 
 $identity=[Security.Principal.WindowsIdentity]::GetCurrent()
 
@@ -47,6 +47,14 @@ if(-not $isAdmin){
     -ArgumentList "-ExecutionPolicy Bypass -NoExit -File `"$adminFile`""
 
     exit
+}
+
+if(!(Test-Path $GLITCH_ERROR_FILE)){
+
+    New-Item `
+    -ItemType File `
+    -Path $GLITCH_ERROR_FILE `
+    -Force | Out-Null
 }
 
 $ollamaReady=$false
@@ -107,7 +115,7 @@ function Write-GlitchError {
         $log="[$time] $ErrorMessage"
 
         Add-Content `
-        "$env:TEMP\glitch_error_logs.txt" `
+        $GLITCH_ERROR_FILE `
         $log
 
     }catch{}
@@ -148,6 +156,8 @@ function Show-GlitchRandomMessage {
     }catch{
 
         Write-Host "[RANDOM MESSAGE FAILED]"
+
+        Write-GlitchError $_
     }
 }
 
@@ -208,6 +218,8 @@ beep
 mute
 unmute
 download
+logs
+clearlogs
 help
 
 Always answer:
@@ -231,6 +243,8 @@ function Test-GlitchAuth {
 
         Write-Host "[ACCESS DENIED]"
 
+        Write-GlitchError "ACCESS DENIED FOR USER: $user"
+
         return $false
     }
 
@@ -248,6 +262,9 @@ function Start-GlitchAI {
         if(-not $ollamaReady){
 
             Write-Host "[OLLAMA OFFLINE]"
+
+            Write-GlitchError "OLLAMA OFFLINE"
+
             return
         }
 
@@ -270,14 +287,6 @@ function Start-GlitchGUI {
     try{
 
         Add-Type -AssemblyName System.Windows.Forms
-
-        $name=Read-Host "GUI NAME"
-
-        if($name -eq "gui_1"){
-
-            Write-Host "[SYSTEM RESERVED]"
-            return
-        }
 
         $title=Read-Host "GUI TITLE"
 
@@ -322,6 +331,9 @@ function Start-GlitchChat {
         if([string]::IsNullOrWhiteSpace($room)){
 
             Write-Host "[INVALID ROOM]"
+
+            Write-GlitchError "INVALID CHAT ROOM"
+
             return
         }
 
@@ -352,7 +364,10 @@ function Start-GlitchChat {
                 $chatFile `
                 -ErrorAction SilentlyContinue
 
-            }catch{}
+            }catch{
+
+                Write-GlitchError $_
+            }
 
             Write-Host ""
             Write-Host "[ENTER = REFRESH]"
@@ -399,6 +414,9 @@ function Start-GlitchCopyCode {
         if(-not $ollamaReady){
 
             Write-Host "[OLLAMA OFFLINE]"
+
+            Write-GlitchError "OLLAMA OFFLINE"
+
             return
         }
 
@@ -474,6 +492,36 @@ function Start-GlitchUnmute {
     Play-GlitchBeep 1200 100
 }
 
+function Start-GlitchLogs {
+
+    try{
+
+        notepad $GLITCH_ERROR_FILE
+
+    }catch{
+
+        Write-Host "[FAILED TO OPEN LOGS]"
+
+        Write-GlitchError $_
+    }
+}
+
+function Start-GlitchClearLogs {
+
+    try{
+
+        Clear-Content $GLITCH_ERROR_FILE
+
+        Write-Host "[LOGS CLEARED]"
+
+    }catch{
+
+        Write-Host "[FAILED TO CLEAR LOGS]"
+
+        Write-GlitchError $_
+    }
+}
+
 function Start-GlitchUpdate {
 
     param([string]$Version)
@@ -519,6 +567,9 @@ function Start-GlitchUpdate {
         if(!(Test-Path $temp)){
 
             Write-Host "[VERSION NOT FOUND]"
+
+            Write-GlitchError "VERSION NOT FOUND"
+
             return
         }
 
@@ -531,6 +582,9 @@ function Start-GlitchUpdate {
         ){
 
             Write-Host "[INVALID UPDATE FILE]"
+
+            Write-GlitchError "INVALID UPDATE FILE"
+
             return
         }
 
@@ -583,6 +637,10 @@ doskey mute=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP
 
 doskey unmute=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchUnmute"
 
+doskey logs=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchLogs"
+
+doskey clearlogs=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchClearLogs"
+
 doskey update=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchUpdate '$*'"
 
 doskey download=winget install -e --id $*
@@ -591,8 +649,8 @@ doskey updateFORCE=powershell -ExecutionPolicy Bypass -Command "$temp=$env:TEMP 
 
 doskey uninstall=reg delete "HKCU\Software\Microsoft\Command Processor" /v AutoRun /f
 
-doskey help=echo ai gui chat copycode reload music beep mute unmute update download updateFORCE
+doskey help=echo ai gui chat copycode reload music beep mute unmute logs clearlogs update download updateFORCE fool
 
-doskey tryagain=echo $ipoopedmypants
+doskey fool=echo $ipoopedmypants
 
 Write-Host "SYSTEM LOADED..."
