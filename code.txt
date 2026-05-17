@@ -165,9 +165,16 @@ function Start-GlitchSearch {
 
     try{
 
-        $url="https://duckduckgo.com/html/?q=$Query"
+        $url="https://www.bing.com/search?q=$Query"
 
-        $html=(Invoke-WebRequest $url -UseBasicParsing).Content
+        $headers=@{
+            "User-Agent"="Mozilla/5.0"
+        }
+
+        $html=(Invoke-WebRequest `
+        -Uri $url `
+        -Headers $headers `
+        -UseBasicParsing).Content
 
     }catch{
 
@@ -177,7 +184,7 @@ function Start-GlitchSearch {
 
     $matches=[regex]::Matches(
         $html,
-        '<a rel="nofollow" class="result__a" href="(.*?)">(.*?)</a>'
+        '<h2><a href="(.*?)".*?>(.*?)</a>'
     )
 
     if($matches.Count -eq 0){
@@ -235,7 +242,14 @@ function Start-GlitchSearch {
 
     try{
 
-        $site=(Invoke-WebRequest $target -UseBasicParsing).Content
+        $headers=@{
+            "User-Agent"="Mozilla/5.0"
+        }
+
+        $site=(Invoke-WebRequest `
+        -Uri $target `
+        -Headers $headers `
+        -UseBasicParsing).Content
 
         $site=$site -replace '<script[\s\S]*?</script>',''
         $site=$site -replace '<style[\s\S]*?</style>',''
@@ -252,7 +266,6 @@ function Start-GlitchSearch {
         Write-Host "[FAILED TO LOAD WEBSITE]"
     }
 }
-
 function Start-GlitchCopyCode {
 
     param([string]$Prompt)
