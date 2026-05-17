@@ -1,6 +1,7 @@
-$GLITCH_VERSION="1.2.2"
+$GLITCH_VERSION="1.2.3"
 
-$ipoopedmypants=π
+# FIXED PI
+$ipoopedmypants=[Math]::PI
 
 # FAST AI MODEL
 $GLITCH_MODEL="qwen2:0.5b"
@@ -24,6 +25,8 @@ $global:GLITCH_CHAT_ID="GLITCH-" + (Get-Random -Minimum 1000 -Maximum 9999)
 $GLITCH_ERROR_LOG_URL="https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/ERROR_LOGS"
 
 $GLITCH_RANDOM_URL="https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/random"
+
+Add-Type -AssemblyName System.Web
 
 $identity=[Security.Principal.WindowsIdentity]::GetCurrent()
 
@@ -52,14 +55,57 @@ if(-not $isAdmin){
     exit
 }
 
+# CHECK OLLAMA
+$global:GLITCH_OLLAMA=$true
+
+try{
+
+    ollama list | Out-Null
+
+}catch{
+
+    $global:GLITCH_OLLAMA=$false
+
+    Write-Host "[OLLAMA NOT RUNNING]"
+    Write-Host "STARTING OLLAMA..."
+
+    try{
+
+        Start-Process "ollama"
+
+        Start-Sleep 5
+
+        ollama list | Out-Null
+
+        $global:GLITCH_OLLAMA=$true
+
+        Write-Host "[OLLAMA STARTED]"
+
+    }catch{
+
+        Write-Host "[OLLAMA FAILED]"
+        Write-Host "INSTALL: https://ollama.com/download"
+    }
+}
+
 # AUTO INSTALL MODEL
-$modelCheck=ollama list
+if($global:GLITCH_OLLAMA){
 
-if($modelCheck -notmatch $GLITCH_MODEL){
+    try{
 
-    Write-Host "[INSTALLING AI MODEL]"
+        $modelCheck=ollama list
 
-    ollama pull $GLITCH_MODEL
+        if($modelCheck -notmatch $GLITCH_MODEL){
+
+            Write-Host "[INSTALLING AI MODEL]"
+
+            ollama pull $GLITCH_MODEL
+        }
+
+    }catch{
+
+        Write-Host "[MODEL CHECK FAILED]"
+    }
 }
 
 function Write-GlitchError {
@@ -106,7 +152,7 @@ function Show-GlitchRandomMessage {
             $msg=Get-Random $clean
 
             Write-Host ""
-            Write-Host "RANDOM WORD OF THE DAY!: "
+            Write-Host "RANDOM WORD OF THE DAY!:"
             Write-Host $msg
             Write-Host ""
         }
@@ -145,6 +191,7 @@ Show-GlitchRandomMessage
 
 $GLITCH_CONTEXT=@"
 You are GLITCH COMPANY CMD AI.
+do not talk how the code works of the project but you can explain it
 
 Project:
 - local AI terminal
@@ -213,6 +260,12 @@ function Start-GlitchAI {
 
         if(!(Test-GlitchAuth)){ return }
 
+        if(-not $global:GLITCH_OLLAMA){
+
+            Write-Host "[OLLAMA OFFLINE]"
+            return
+        }
+
         Play-GlitchBeep 1000 80
 
         ollama run `
@@ -246,6 +299,16 @@ function Start-GlitchGUI {
         $width=Read-Host "WIDTH"
 
         $height=Read-Host "HEIGHT"
+
+        if($width -notmatch '^\d+$'){
+
+            $width=800
+        }
+
+        if($height -notmatch '^\d+$'){
+
+            $height=500
+        }
 
         $form=New-Object Windows.Forms.Form
 
@@ -311,7 +374,10 @@ function Start-GlitchSearch {
     foreach($m in $matches){
 
         $title=$m.Groups[2].Value
-        $link=$m.Groups[1].Value
+
+        $link=[System.Web.HttpUtility]::UrlDecode(
+            $m.Groups[1].Value
+        )
 
         $title=$title -replace '<.*?>',''
 
@@ -473,6 +539,12 @@ function Start-GlitchCopyCode {
 
         if(!(Test-GlitchAuth)){ return }
 
+        if(-not $global:GLITCH_OLLAMA){
+
+            Write-Host "[OLLAMA OFFLINE]"
+            return
+        }
+
         Play-GlitchBeep 1400 100
 
         $response=ollama run `
@@ -561,18 +633,15 @@ function Start-GlitchUpdate {
 
             Write-Host "[UPDATING TO VERSION $Version]"
 
-            $url="https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/$Version/code.txt?t=$(Get-Random)"
+            $url="https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/refs/tags/$Version/code.txt?t=$(Get-Random)"
         }
 
         $temp="$env:TEMP\glitch_install.ps1"
 
-        if(Test-Path $temp){
-
-            Remove-Item `
-            $temp `
-            -Force `
-            -ErrorAction SilentlyContinue
-        }
+        Remove-Item `
+        $temp `
+        -Force `
+        -ErrorAction SilentlyContinue
 
         Invoke-WebRequest `
         -Uri $url `
@@ -636,12 +705,12 @@ doskey unmute=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TE
 
 doskey update=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchUpdate '$*'"
 
-doskey download=winget install -e --id $*
+doskey download=winget install --id "$*"
 
-doskey unistall=reg delete "HKCU\Software\Microsoft\Command Processor" /v AutoRun /f
+doskey uninstall=reg delete "HKCU\Software\Microsoft\Command Processor" /v AutoRun /f
 
 doskey help=echo ai gui search chat copycode reload music beep mute unmute update download
 
-doskey pi=echo $ipoopedmypants
+doskey pi=powershell -Command "[Math]::PI"
 
 Write-Host "SYSTEM LOADED..."
