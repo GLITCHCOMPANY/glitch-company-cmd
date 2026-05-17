@@ -199,7 +199,6 @@ Project:
 Commands:
 ai
 gui
-search
 chat
 copycode
 update
@@ -245,6 +244,12 @@ function Start-GlitchAI {
     try{
 
         if(!(Test-GlitchAuth)){ return }
+
+        if(-not $ollamaReady){
+
+            Write-Host "[OLLAMA OFFLINE]"
+            return
+        }
 
         Play-GlitchBeep 1000 80
 
@@ -343,14 +348,9 @@ function Start-GlitchChat {
 
             try{
 
-                $content=Get-Content `
+                Get-Content `
                 $chatFile `
                 -ErrorAction SilentlyContinue
-
-                foreach($line in $content){
-
-                    Write-Host $line
-                }
 
             }catch{}
 
@@ -395,6 +395,12 @@ function Start-GlitchCopyCode {
     try{
 
         if(!(Test-GlitchAuth)){ return }
+
+        if(-not $ollamaReady){
+
+            Write-Host "[OLLAMA OFFLINE]"
+            return
+        }
 
         Play-GlitchBeep 1400 100
 
@@ -478,29 +484,32 @@ function Start-GlitchUpdate {
 
             Write-Host "[UPDATING TO LATEST VERSION]"
 
-            $url="https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt?t=$(Get-Random)"
+            $api=Invoke-RestMethod `
+            -Uri "https://api.github.com/repos/GLITCHCOMPANY/glitch-company-cmd/releases/latest" `
+            -UseBasicParsing
+
+            $latest=$api.tag_name
+
+            $url="https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/$latest/code.txt?t=$(Get-Random)"
 
         }else{
 
-            if($Version -notmatch "^v"){
-
-                $Version="v$Version"
-            }
-
             Write-Host "[UPDATING TO VERSION $Version]"
+
+            if($Version -notmatch "^version"){
+
+                $Version="version$Version"
+            }
 
             $url="https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/$Version/code.txt?t=$(Get-Random)"
         }
 
         $temp="$env:TEMP\glitch_install.ps1"
 
-        if(Test-Path $temp){
-
-            Remove-Item `
-            $temp `
-            -Force `
-            -ErrorAction SilentlyContinue
-        }
+        Remove-Item `
+        $temp `
+        -Force `
+        -ErrorAction SilentlyContinue
 
         Invoke-WebRequest `
         -Uri $url `
@@ -509,33 +518,28 @@ function Start-GlitchUpdate {
 
         if(!(Test-Path $temp)){
 
-            Write-Host "[UPDATE FILE FAILED]"
-            return
-        }
-
-        $content=Get-Content `
-        $temp `
-        -Raw `
-        -ErrorAction SilentlyContinue
-
-        if(
-            [string]::IsNullOrWhiteSpace($content) `
-            -or `
-            $content -match "404"
-        ){
-
             Write-Host "[VERSION NOT FOUND]"
             return
         }
 
-        Write-Host "[STARTING INSTALLER]"
+        $content=Get-Content $temp -Raw
+
+        if(
+            [string]::IsNullOrWhiteSpace($content) `
+            -or `
+            $content.Length -lt 100
+        ){
+
+            Write-Host "[INVALID UPDATE FILE]"
+            return
+        }
+
+        Write-Host "[INSTALLING UPDATE]"
 
         powershell `
         -ExecutionPolicy Bypass `
         -NoExit `
         -File $temp
-
-        Write-Host "[UPDATED SUCCESSFULLY]"
 
     }catch{
 
@@ -587,8 +591,8 @@ doskey updateFORCE=powershell -ExecutionPolicy Bypass -Command "$temp=$env:TEMP 
 
 doskey uninstall=reg delete "HKCU\Software\Microsoft\Command Processor" /v AutoRun /f
 
-doskey help=echo ai gui chat copycode reload music beep mute unmute update download try_again
+doskey help=echo ai gui chat copycode reload music beep mute unmute update download updateFORCE
 
-doskey try_again=echo $ipoopedmypants
+doskey tryagain=echo $ipoopedmypants
 
 Write-Host "SYSTEM LOADED..."
