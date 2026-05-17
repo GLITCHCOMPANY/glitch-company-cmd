@@ -49,26 +49,51 @@ if(-not $isAdmin){
     exit
 }
 
+$ollamaReady=$false
+
 try{
 
-    $ollamaTest=ollama list
+    ollama list | Out-Null
+
+    $ollamaReady=$true
 
 }catch{
 
     Write-Host "[STARTING OLLAMA]"
 
-    Start-Process ollama "serve"
+    Start-Process ollama "serve" -WindowStyle Hidden
 
-    Start-Sleep 5
+    for($i=0;$i -lt 15;$i++){
+
+        Start-Sleep 2
+
+        try{
+
+            ollama list | Out-Null
+
+            $ollamaReady=$true
+
+            break
+
+        }catch{}
+    }
 }
 
-$modelCheck=ollama list
+if(-not $ollamaReady){
 
-if($modelCheck -notmatch $GLITCH_MODEL){
+    Write-Host "[OLLAMA OFFLINE]"
+    Write-Host "[AI DISABLED]"
 
-    Write-Host "[INSTALLING AI MODEL]"
+}else{
 
-    ollama pull $GLITCH_MODEL
+    $modelCheck=ollama list
+
+    if($modelCheck -notmatch $GLITCH_MODEL){
+
+        Write-Host "[INSTALLING AI MODEL]"
+
+        ollama pull $GLITCH_MODEL
+    }
 }
 
 function Write-GlitchError {
@@ -115,7 +140,7 @@ function Show-GlitchRandomMessage {
             $msg=Get-Random $clean
 
             Write-Host ""
-            Write-Host "RANDOM FRASE OF THE DAY!: "
+            Write-Host "RANDOM PHRASE OF THE DAY!: "
             Write-Host $msg
             Write-Host ""
         }
@@ -146,7 +171,7 @@ Write-Host "=========================="
 Write-Host "GLITCH COMPANY CMD"
 Write-Host "VERSION $GLITCH_VERSION"
 Write-Host "CHAT ID $global:GLITCH_CHAT_ID"
-Write-Host "/made by system          /"
+Write-Host "MADE BY SYSTEM"
 Write-Host "=========================="
 
 Show-GlitchRandomMessage
@@ -271,128 +296,6 @@ function Start-GlitchGUI {
     }
 }
 
-function Start-GlitchSearch {
-
-    param([string]$Query)
-
-    Play-GlitchBeep 800 60
-
-    try{
-
-        $url="https://html.duckduckgo.com/html/?q=$Query"
-
-        $headers=@{
-            "User-Agent"="Mozilla/5.0"
-        }
-
-        $html=(Invoke-WebRequest `
-        -Uri $url `
-        -Headers $headers `
-        -UseBasicParsing).Content
-
-    }catch{
-
-        Write-Host "[SEARCH FAILED]"
-
-        Write-GlitchError $_
-
-        return
-    }
-
-    $matches=[regex]::Matches(
-        $html,
-        'result__a.*?href="(.*?)".*?>(.*?)</a>'
-    )
-
-    if($matches.Count -eq 0){
-
-        Write-Host "[NO RESULTS]"
-        return
-    }
-
-    $results=@()
-
-    Write-Host ""
-    Write-Host "========== SEARCH RESULTS =========="
-    Write-Host ""
-
-    foreach($m in $matches){
-
-        $title=$m.Groups[2].Value
-        $link=$m.Groups[1].Value
-
-        $title=$title -replace '<.*?>',''
-
-        if(
-            $title.Length -gt 0 `
-            -and `
-            $results.Count -lt 10
-        ){
-
-            Write-Host "[" + $results.Count + "]"
-            Write-Host $title
-            Write-Host ""
-
-            $results += $link
-        }
-    }
-
-    if($results.Count -eq 0){
-
-        Write-Host "[NO RESULTS]"
-        return
-    }
-
-    Write-Host ""
-
-    $choice=Read-Host "SELECT RESULT"
-
-    if($choice -notmatch '^\d+$'){
-
-        return
-    }
-
-    $index=[int]$choice
-
-    if($index -ge $results.Count){
-
-        return
-    }
-
-    $target=$results[$index]
-
-    Write-Host ""
-    Write-Host "========== WEBSITE CONTENT =========="
-    Write-Host ""
-
-    try{
-
-        $site=(Invoke-WebRequest `
-        -Uri $target `
-        -Headers $headers `
-        -UseBasicParsing).Content
-
-        $site=$site -replace '<script[\s\S]*?</script>',''
-        $site=$site -replace '<style[\s\S]*?</style>',''
-        $site=$site -replace '<.*?>',' '
-        $site=$site -replace '&nbsp;',' '
-        $site=$site -replace '\s+',' '
-
-        if($site.Length -gt 8000){
-
-            $site=$site.Substring(0,8000)
-        }
-
-        Write-Host $site
-
-    }catch{
-
-        Write-Host "[FAILED TO LOAD WEBSITE]"
-
-        Write-GlitchError $_
-    }
-}
-
 function Start-GlitchChat {
 
     try{
@@ -426,8 +329,6 @@ function Start-GlitchChat {
             -Path $chatFile `
             -Force | Out-Null
         }
-
-        $global:lastChatSize=0
 
         while($true){
 
@@ -486,6 +387,7 @@ function Start-GlitchChat {
         Write-GlitchError $_
     }
 }
+
 function Start-GlitchCopyCode {
 
     param([string]$Prompt)
@@ -580,6 +482,11 @@ function Start-GlitchUpdate {
 
         }else{
 
+            if($Version -notmatch "^v"){
+
+                $Version="v$Version"
+            }
+
             Write-Host "[UPDATING TO VERSION $Version]"
 
             $url="https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/$Version/code.txt?t=$(Get-Random)"
@@ -606,6 +513,23 @@ function Start-GlitchUpdate {
             return
         }
 
+        $content=Get-Content `
+        $temp `
+        -Raw `
+        -ErrorAction SilentlyContinue
+
+        if(
+            [string]::IsNullOrWhiteSpace($content) `
+            -or `
+            $content -match "404"
+        ){
+
+            Write-Host "[VERSION NOT FOUND]"
+            return
+        }
+
+        Write-Host "[STARTING INSTALLER]"
+
         powershell `
         -ExecutionPolicy Bypass `
         -NoExit `
@@ -616,6 +540,8 @@ function Start-GlitchUpdate {
     }catch{
 
         Write-Host "[UPDATE FAILED]"
+
+        Write-Host $_
 
         Write-GlitchError $_
     }
@@ -639,8 +565,6 @@ doskey ai=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\g
 
 doskey gui=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchGUI"
 
-doskey search=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchSearch '$*'"
-
 doskey chat=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchChat"
 
 doskey copycode=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchCopyCode '$*'"
@@ -659,9 +583,9 @@ doskey update=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TE
 
 doskey download=winget install -e --id $*
 
-doskey unistall=reg delete "HKCU\Software\Microsoft\Command Processor" /v AutoRun /f
+doskey uninstall=reg delete "HKCU\Software\Microsoft\Command Processor" /v AutoRun /f
 
-doskey help=echo ai gui search chat copycode reload music beep mute unmute update download
+doskey help=echo ai gui chat copycode reload music beep mute unmute update download
 
 doskey pi=echo $ipoopedmypants
 
