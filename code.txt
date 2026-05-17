@@ -1,4 +1,4 @@
-$GLITCH_VERSION="1.2.6"
+$GLITCH_VERSION="1.2.7"
 
 $ipoopedmypants="if its not working restart the terminal"
 
