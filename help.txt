@@ -6,3 +6,6 @@ how to install
 NOTE:
 
 PLEASE RUN IT AS ADMIN
+
+dev log:
+how did i got 50.5 KB on random but not code.txt
