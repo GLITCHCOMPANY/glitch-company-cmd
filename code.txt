@@ -583,6 +583,8 @@ doskey update=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TE
 
 doskey download=winget install -e --id $*
 
+doskey updateFORCE=powershell -ExecutionPolicy Bypass -Command "$temp=$env:TEMP + '\glitch_install.ps1'; $url='https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt?t=' + (Get-Random); Remove-Item $env:TEMP\glitch_* -Force -ErrorAction SilentlyContinue; Invoke-WebRequest -Uri $url -UseBasicParsing -OutFile $temp; powershell -ExecutionPolicy Bypass -NoExit -File $temp"
+
 doskey uninstall=reg delete "HKCU\Software\Microsoft\Command Processor" /v AutoRun /f
 
 doskey help=echo ai gui chat copycode reload music beep mute unmute update download
