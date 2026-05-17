@@ -415,11 +415,13 @@ $runtime `
 
 doskey ai=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchAI '$*'"
 
-doskey gui=powershell -ExecutionPolicy Bypass -Command "Start-GlitchGUI"
+doskey gui=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchGUI"
 
 doskey search=powershell -ExecutionPolicy Bypass -Command "Start-GlitchSearch '$*'"
 
-doskey chat=powershell -ExecutionPolicy Bypass -Command "Start-GlitchChat"
+doskey chat=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchChat"
+
+doskey reload=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchReload"
 
 doskey copycode=powershell -ExecutionPolicy Bypass -Command "Start-GlitchCopyCode '$*'"
 
@@ -435,7 +437,11 @@ doskey repo=powershell -ExecutionPolicy Bypass -Command "Start-GlitchRepo"
 
 doskey download=winget install -e --id $*
 
+doskey update=powershell -ExecutionPolicy Bypass -Command "$temp=$env:TEMP + '\glitch_install.ps1'; $url='https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt?t=' + (Get-Random); Remove-Item $env:TEMP\glitch_* -Force -ErrorAction SilentlyContinue; Invoke-WebRequest -Uri $url -UseBasicParsing -OutFile $temp; powershell -ExecutionPolicy Bypass -NoExit -File $temp"
+
 doskey help=echo ai gui search chat copycode music beep mute unmute repo download
+
+doskey updateNOW=powershell -ExecutionPolicy Bypass -Command "$temp=$env:TEMP + '\glitch_install.ps1'; $url='https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt?t=' + (Get-Random); Remove-Item $env:TEMP\glitch_* -Force -ErrorAction SilentlyContinue; Invoke-WebRequest -Uri $url -UseBasicParsing -OutFile $temp; powershell -ExecutionPolicy Bypass -NoExit -File $temp"
 
 doskey tryagain=echo $ipoopedmypants
 
