@@ -26,9 +26,16 @@ if(-not $isAdmin){
     Write-Host "[ADMIN REQUIRED]"
     Write-Host "REQUESTING ELEVATION..."
 
+    $adminFile="$env:TEMP\glitch_admin.ps1"
+
+    Invoke-WebRequest `
+    "https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt?t=$(Get-Random)" `
+    -UseBasicParsing `
+    -OutFile $adminFile
+
     Start-Process powershell `
     -Verb RunAs `
-    -ArgumentList "-ExecutionPolicy Bypass -NoExit -Command `"Invoke-WebRequest 'https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt?t=$(Get-Random)' -OutFile `$env:TEMP\glitch_admin.ps1; . `$env:TEMP\glitch_admin.ps1`""
+    -ArgumentList "-ExecutionPolicy Bypass -NoExit -File `"$adminFile`""
 
     exit
 }
@@ -218,16 +225,25 @@ function Start-GlitchSearch {
 
         $title=$title -replace '<.*?>',''
 
-        Write-Host "[$i]"
-        Write-Host "$title"
-        Write-Host ""
+        if($title.Length -gt 0){
 
-        $results+=$link
+            Write-Host "[$i]"
+            Write-Host "$title"
+            Write-Host ""
 
-        if($i -ge 9){
+            $results+=$link
+        }
+
+        if($results.Count -ge 10){
 
             break
         }
+    }
+
+    if($results.Count -eq 0){
+
+        Write-Host "[NO RESULTS]"
+        return
     }
 
     Write-Host ""
@@ -298,14 +314,14 @@ function Start-GlitchReload {
 
     Play-GlitchBeep 1500 100
 
-    $url="https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt?t=$(Get-Random)"
+    $reloadFile="$env:TEMP\glitch_reload.ps1"
 
     Invoke-WebRequest `
-    $url `
+    "https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt?t=$(Get-Random)" `
     -UseBasicParsing `
-    -OutFile "$env:TEMP\glitch_reload.ps1"
+    -OutFile $reloadFile
 
-    . "$env:TEMP\glitch_reload.ps1"
+    . $reloadFile
 }
 
 function Start-GlitchMusic {
@@ -341,9 +357,16 @@ function Start-GlitchUnmute {
 
 $runtime="$env:TEMP\glitch_runtime.ps1"
 
-if($MyInvocation.MyCommand.Path -ne $runtime){
+if(
+    $MyInvocation.MyCommand.Path -ne $runtime `
+    -and `
+    (Test-Path $MyInvocation.MyCommand.Path)
+){
 
-    Copy-Item $MyInvocation.MyCommand.Path $runtime -Force
+    Copy-Item `
+    $MyInvocation.MyCommand.Path `
+    $runtime `
+    -Force
 }
 
 doskey ai=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchAI '$*'"
@@ -366,7 +389,7 @@ doskey unmute=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TE
 
 doskey download=winget install -e --id $*
 
-doskey update=powershell -ExecutionPolicy Bypass -NoProfile -Command "& { `$next='$versionnext'; `$temp=`$env:TEMP + '\glitch_update.ps1'; `$url='https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt?v=' + `$next; Invoke-WebRequest `$url -UseBasicParsing -OutFile `$temp; . `$temp; Write-Host ('[UPDATED TO VERSION ' + `$next + ']') }"
+doskey update=powershell -ExecutionPolicy Bypass -NoProfile -Command "$next='$versionnext'; $temp=$env:TEMP + '\glitch_update.ps1'; $url='https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt?v=' + $next; Invoke-WebRequest $url -UseBasicParsing -OutFile $temp; . $temp; Write-Host ('[UPDATED TO VERSION ' + $next + ']')"
 
 doskey help=echo ai gui search copycode reload music beep mute unmute update download
 
