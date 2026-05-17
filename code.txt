@@ -427,6 +427,8 @@ function Start-GlitchChat {
             -Force | Out-Null
         }
 
+        $global:lastChatSize=0
+
         while($true){
 
             Clear-Host
@@ -438,11 +440,21 @@ function Start-GlitchChat {
             Write-Host "=========================="
             Write-Host ""
 
-            Get-Content `
-            $chatFile `
-            -ErrorAction SilentlyContinue
+            try{
+
+                $content=Get-Content `
+                $chatFile `
+                -ErrorAction SilentlyContinue
+
+                foreach($line in $content){
+
+                    Write-Host $line
+                }
+
+            }catch{}
 
             Write-Host ""
+            Write-Host "[ENTER = REFRESH]"
             Write-Host "[TYPE exit TO CLOSE]"
             Write-Host ""
 
@@ -453,7 +465,7 @@ function Start-GlitchChat {
                 break
             }
 
-            if($msg.Length -eq 0){
+            if([string]::IsNullOrWhiteSpace($msg)){
 
                 continue
             }
@@ -463,6 +475,8 @@ function Start-GlitchChat {
             Add-Content `
             $chatFile `
             "[$time][$global:GLITCH_CHAT_ID] $msg"
+
+            Start-Sleep -Milliseconds 300
         }
 
     }catch{
@@ -472,7 +486,6 @@ function Start-GlitchChat {
         Write-GlitchError $_
     }
 }
-
 function Start-GlitchCopyCode {
 
     param([string]$Prompt)
