@@ -1,6 +1,6 @@
-$GLITCH_VERSION="1.2.4"
+$GLITCH_VERSION="1.2.5"
 
-$ipoopedmypants="π"
+$ipoopedmypants="if its not working type updateFORCE for forcing the update"
 
 $GLITCH_MODEL="qwen2:0.5b"
 
@@ -587,8 +587,8 @@ doskey updateFORCE=powershell -ExecutionPolicy Bypass -Command "$temp=$env:TEMP 
 
 doskey uninstall=reg delete "HKCU\Software\Microsoft\Command Processor" /v AutoRun /f
 
-doskey help=echo ai gui chat copycode reload music beep mute unmute update download
+doskey help=echo ai gui chat copycode reload music beep mute unmute update download try_again
 
-doskey pi=echo $ipoopedmypants
+doskey try_again=echo $ipoopedmypants
 
 Write-Host "SYSTEM LOADED..."
