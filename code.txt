@@ -115,7 +115,7 @@ function Show-GlitchRandomMessage {
             $msg=Get-Random $clean
 
             Write-Host ""
-            Write-Host "RANDOM WORD OF THE DAY!: "
+            Write-Host "RANDOM FRASE OF THE DAY!: "
             Write-Host $msg
             Write-Host ""
         }
