@@ -1,6 +1,6 @@
-$GLITCH_VERSION="1.1.6"
+$GLITCH_VERSION="1.1.7"
 
-$global:GLITCH_SOUND=$true
+$global:GLITCH_SOUND=$false
 
 $identity=[Security.Principal.WindowsIdentity]::GetCurrent()
 
