@@ -49,7 +49,7 @@ function Play-GlitchBeep {
 
     if($global:GLITCH_SOUND){
 
-        [console]::beep($freq,$time)
+        [console]::Beep($freq,$time)
     }
 }
 
@@ -184,7 +184,7 @@ function Start-GlitchSearch {
 
     try{
 
-        $url="https://www.bing.com/search?q=$Query"
+        $url="https://html.duckduckgo.com/html/?q=$Query"
 
         $headers=@{
             "User-Agent"="Mozilla/5.0"
@@ -203,7 +203,7 @@ function Start-GlitchSearch {
 
     $matches=[regex]::Matches(
         $html,
-        '<h2><a href="(.*?)".*?>(.*?)</a>'
+        'result__a.*?href="(.*?)".*?>(.*?)</a>'
     )
 
     if($matches.Count -eq 0){
@@ -218,25 +218,24 @@ function Start-GlitchSearch {
     Write-Host "========== SEARCH RESULTS =========="
     Write-Host ""
 
-    for($i=0;$i -lt $matches.Count;$i++){
+    foreach($m in $matches){
 
-        $title=$matches[$i].Groups[2].Value
-        $link=$matches[$i].Groups[1].Value
+        $title=$m.Groups[2].Value
+        $link=$m.Groups[1].Value
 
         $title=$title -replace '<.*?>',''
 
-        if($title.Length -gt 0){
+        if(
+            $title.Length -gt 0 `
+            -and `
+            $results.Count -lt 10
+        ){
 
-            Write-Host "[$i]"
-            Write-Host "$title"
+            Write-Host "[" + $results.Count + "]"
+            Write-Host $title
             Write-Host ""
 
-            $results+=$link
-        }
-
-        if($results.Count -ge 10){
-
-            break
+            $results += $link
         }
     }
 
@@ -270,10 +269,6 @@ function Start-GlitchSearch {
 
     try{
 
-        $headers=@{
-            "User-Agent"="Mozilla/5.0"
-        }
-
         $site=(Invoke-WebRequest `
         -Uri $target `
         -Headers $headers `
@@ -285,9 +280,12 @@ function Start-GlitchSearch {
         $site=$site -replace '&nbsp;',' '
         $site=$site -replace '\s+',' '
 
-        $max=[Math]::Min(8000,$site.Length)
+        if($site.Length -gt 8000){
 
-        Write-Host $site.Substring(0,$max)
+            $site=$site.Substring(0,8000)
+        }
+
+        Write-Host $site
 
     }catch{
 
@@ -389,7 +387,7 @@ doskey unmute=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TE
 
 doskey download=winget install -e --id $*
 
-doskey update=powershell -ExecutionPolicy Bypass -NoProfile -Command "$next='$versionnext'; $temp=$env:TEMP + '\glitch_update.ps1'; $url='https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt?v=' + $next; Invoke-WebRequest $url -UseBasicParsing -OutFile $temp; . $temp; Write-Host ('[UPDATED TO VERSION ' + $next + ']')"
+doskey update=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; `$next='$versionnext'; `$temp=`$env:TEMP + '\glitch_update.ps1'; `$url='https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt?v=' + `$next; Invoke-WebRequest `$url -UseBasicParsing -OutFile `$temp; . `$temp; Write-Host ('[UPDATED TO VERSION ' + `$next + ']')"
 
 doskey help=echo ai gui search copycode reload music beep mute unmute update download
 
