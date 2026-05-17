@@ -387,7 +387,7 @@ doskey unmute=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TE
 
 doskey download=winget install -e --id $*
 
-doskey update=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; `$next='$versionnext'; `$temp=`$env:TEMP + '\glitch_update.ps1'; `$url='https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt?v=' + `$next; Invoke-WebRequest `$url -UseBasicParsing -OutFile `$temp; . `$temp; Write-Host ('[UPDATED TO VERSION ' + `$next + ']')"
+doskey update=powershell -ExecutionPolicy Bypass -Command "$temp=$env:TEMP + '\glitch_install.ps1'; $url='https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt?t=' + (Get-Random); Remove-Item $env:TEMP\glitch_* -Force -ErrorAction SilentlyContinue; Invoke-WebRequest -Uri $url -UseBasicParsing -OutFile $temp; powershell -ExecutionPolicy Bypass -NoExit -File $temp"
 
 doskey help=echo ai gui search copycode reload music beep mute unmute update download
 
