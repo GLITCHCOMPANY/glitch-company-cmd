@@ -1,12 +1,7 @@
-$GLITCH_VERSION="1.2.3"
+$GLITCH_VERSION="1.2.1"
 
 # FAST AI MODEL
 $GLITCH_MODEL="qwen2:0.5b"
-
-# ONLINE FILES
-$GLITCH_ERROR_LOG_URL="https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/ERROR_LOGS"
-
-$GLITCH_RANDOM_URL="https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/random"
 
 # NEXT VERSION SYSTEM
 $splitVersion=$GLITCH_VERSION.Split(".")
@@ -23,7 +18,10 @@ $global:GLITCH_SOUND=$false
 
 $global:GLITCH_CHAT_ID="GLITCH-" + (Get-Random -Minimum 1000 -Maximum 9999)
 
-$global:GLITCH_ERROR_FILE="$env:TEMP\glitch_error_logs.txt"
+# URLS
+$GLITCH_ERROR_LOG_URL="https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/ERROR_LOGS"
+
+$GLITCH_RANDOM_URL="https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/random"
 
 $identity=[Security.Principal.WindowsIdentity]::GetCurrent()
 
@@ -64,36 +62,19 @@ if($modelCheck -notmatch $GLITCH_MODEL){
 
 function Write-GlitchError {
 
-    param(
-        [string]$ErrorText
-    )
+    param($ErrorMessage)
 
-    $time=Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    try{
 
-    $log="[$time] $ErrorText"
+        $time=Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 
-    Add-Content `
-    -Path $global:GLITCH_ERROR_FILE `
-    -Value $log
-}
+        $log="[$time] $ErrorMessage"
 
-function Show-GlitchErrors {
+        Add-Content `
+        "$env:TEMP\glitch_error_logs.txt" `
+        $log
 
-    if(!(Test-Path $global:GLITCH_ERROR_FILE)){
-
-        Write-Host "[NO ERROR LOGS]"
-        return
-    }
-
-    Write-Host ""
-    Write-Host "========== ERROR LOGS =========="
-    Write-Host ""
-
-    Get-Content $global:GLITCH_ERROR_FILE
-
-    Write-Host ""
-    Write-Host "ONLINE LOGS:"
-    Write-Host $GLITCH_ERROR_LOG_URL
+    }catch{}
 }
 
 function Show-GlitchRandomMessage {
@@ -130,9 +111,7 @@ function Show-GlitchRandomMessage {
 
     }catch{
 
-        Write-Host ""
         Write-Host "[RANDOM MESSAGE FAILED]"
-        Write-Host ""
     }
 }
 
@@ -158,7 +137,6 @@ Write-Host "VERSION $GLITCH_VERSION"
 Write-Host "NEXT VERSION $versionnext"
 Write-Host "MODEL $GLITCH_MODEL"
 Write-Host "CHAT ID $global:GLITCH_CHAT_ID"
-Write-Host "ERROR LOGS ENABLED"
 Write-Host "=========================="
 
 Show-GlitchRandomMessage
@@ -171,7 +149,7 @@ Project:
 - Windows CMD
 - Ollama
 - GitHub auto update
-- GUI builder
+- GUI
 - terminal search engine
 - copycode
 - reload support
@@ -180,8 +158,8 @@ Project:
 - admin auto elevate
 - private chat system
 - fast AI model
-- error log system
 - random startup messages
+- error log system
 
 Commands:
 ai
@@ -189,7 +167,6 @@ gui
 search
 chat
 copycode
-logs
 update
 reload
 music
@@ -220,8 +197,6 @@ function Test-GlitchAuth {
 
         Write-Host "[ACCESS DENIED]"
 
-        Write-GlitchError "ACCESS DENIED FOR USER: $user"
-
         return $false
     }
 
@@ -244,7 +219,7 @@ function Start-GlitchAI {
 
     }catch{
 
-        Write-Host "[AI ERROR]"
+        Write-Host "[AI FAILED]"
 
         Write-GlitchError $_
     }
@@ -254,104 +229,33 @@ function Start-GlitchGUI {
 
     try{
 
-        if(!(Test-GlitchAuth)){ return }
-
         Add-Type -AssemblyName System.Windows.Forms
 
-        $guiName=Read-Host "GUI NAME"
+        $name=Read-Host "GUI NAME"
 
-        if($guiName -eq "gui_1"){
+        if($name -eq "gui_1"){
 
             Write-Host "[SYSTEM RESERVED]"
-
-            Write-GlitchError "ATTEMPT TO USE RESERVED GUI NAME"
-
             return
         }
 
-        $guiTitle=Read-Host "WINDOW TITLE"
+        $title=Read-Host "GUI TITLE"
 
-        if([string]::IsNullOrWhiteSpace($guiTitle)){
+        $width=Read-Host "WIDTH"
 
-            $guiTitle="GLITCH GUI"
-        }
-
-        $guiWidth=Read-Host "WIDTH"
-
-        if($guiWidth -notmatch '^\d+$'){
-
-            $guiWidth=900
-        }
-
-        $guiHeight=Read-Host "HEIGHT"
-
-        if($guiHeight -notmatch '^\d+$'){
-
-            $guiHeight=600
-        }
+        $height=Read-Host "HEIGHT"
 
         $form=New-Object Windows.Forms.Form
-        $form.Text=$guiTitle
-        $form.Width=[int]$guiWidth
-        $form.Height=[int]$guiHeight
 
-        $chat=New-Object Windows.Forms.TextBox
-        $chat.Multiline=$true
-        $chat.Width=$form.Width-40
-        $chat.Height=$form.Height-180
-        $chat.Top=10
-        $chat.Left=10
-        $chat.ScrollBars="Vertical"
-
-        $input=New-Object Windows.Forms.TextBox
-        $input.Width=$form.Width-250
-        $input.Top=$form.Height-120
-        $input.Left=10
-
-        $send=New-Object Windows.Forms.Button
-        $send.Text="SEND"
-        $send.Width=180
-        $send.Height=30
-        $send.Top=$form.Height-122
-        $send.Left=$form.Width-220
-
-        $send.Add_Click({
-
-            try{
-
-                if($input.Text.Length -eq 0){
-
-                    return
-                }
-
-                Play-GlitchBeep 1200 50
-
-                $chat.AppendText("USER: $($input.Text)`r`n")
-                $chat.AppendText("AI THINKING...`r`n")
-
-                $response=ollama run `
-                $GLITCH_MODEL `
-                "$GLITCH_CONTEXT User:$($input.Text)"
-
-                $chat.AppendText("$response`r`n`r`n")
-
-                $input.Clear()
-
-            }catch{
-
-                Write-GlitchError $_
-            }
-        })
-
-        $form.Controls.Add($chat)
-        $form.Controls.Add($input)
-        $form.Controls.Add($send)
+        $form.Text=$title
+        $form.Width=[int]$width
+        $form.Height=[int]$height
 
         [void]$form.ShowDialog()
 
     }catch{
 
-        Write-Host "[GUI ERROR]"
+        Write-Host "[GUI FAILED]"
 
         Write-GlitchError $_
     }
@@ -361,9 +265,9 @@ function Start-GlitchSearch {
 
     param([string]$Query)
 
-    try{
+    Play-GlitchBeep 800 60
 
-        Play-GlitchBeep 800 60
+    try{
 
         $url="https://html.duckduckgo.com/html/?q=$Query"
 
@@ -376,71 +280,82 @@ function Start-GlitchSearch {
         -Headers $headers `
         -UseBasicParsing).Content
 
-        $matches=[regex]::Matches(
-            $html,
-            'result__a.*?href="(.*?)".*?>(.*?)</a>'
-        )
+    }catch{
 
-        if($matches.Count -eq 0){
+        Write-Host "[SEARCH FAILED]"
 
-            Write-Host "[NO RESULTS]"
-            return
+        Write-GlitchError $_
+
+        return
+    }
+
+    $matches=[regex]::Matches(
+        $html,
+        'result__a.*?href="(.*?)".*?>(.*?)</a>'
+    )
+
+    if($matches.Count -eq 0){
+
+        Write-Host "[NO RESULTS]"
+        return
+    }
+
+    $results=@()
+
+    Write-Host ""
+    Write-Host "========== SEARCH RESULTS =========="
+    Write-Host ""
+
+    foreach($m in $matches){
+
+        $title=$m.Groups[2].Value
+        $link=$m.Groups[1].Value
+
+        $title=$title -replace '<.*?>',''
+
+        if(
+            $title.Length -gt 0 `
+            -and `
+            $results.Count -lt 10
+        ){
+
+            Write-Host "[" + $results.Count + "]"
+            Write-Host $title
+            Write-Host ""
+
+            $results += $link
         }
+    }
 
-        $results=@()
+    if($results.Count -eq 0){
 
-        Write-Host ""
-        Write-Host "========== SEARCH RESULTS =========="
-        Write-Host ""
+        Write-Host "[NO RESULTS]"
+        return
+    }
 
-        foreach($m in $matches){
+    Write-Host ""
 
-            $title=$m.Groups[2].Value
-            $link=$m.Groups[1].Value
+    $choice=Read-Host "SELECT RESULT"
 
-            $title=$title -replace '<.*?>',''
+    if($choice -notmatch '^\d+$'){
 
-            if(
-                $title.Length -gt 0 `
-                -and `
-                $results.Count -lt 10
-            ){
+        return
+    }
 
-                Write-Host "[" + $results.Count + "]"
-                Write-Host $title
-                Write-Host ""
+    $index=[int]$choice
 
-                $results += $link
-            }
-        }
+    if($index -ge $results.Count){
 
-        if($results.Count -eq 0){
+        return
+    }
 
-            Write-Host "[NO RESULTS]"
-            return
-        }
+    $target=$results[$index]
 
-        Write-Host ""
+    Write-Host ""
+    Write-Host "========== WEBSITE CONTENT =========="
+    Write-Host ""
 
-        $choice=Read-Host "SELECT RESULT"
-
-        if($choice -notmatch '^\d+$'){
-
-            return
-        }
-
-        $index=[int]$choice
-
-        if($index -ge $results.Count){
-
-            return
-        }
-
-        $target=$results[$index]
-
-        Write-Host ""
-        Write-Host "========== WEBSITE CONTENT =========="
-        Write-Host ""
+    try{
 
         $site=(Invoke-WebRequest `
         -Uri $target `
@@ -462,7 +377,7 @@ function Start-GlitchSearch {
 
     }catch{
 
-        Write-Host "[SEARCH ERROR]"
+        Write-Host "[FAILED TO LOAD WEBSITE]"
 
         Write-GlitchError $_
     }
@@ -542,7 +457,7 @@ function Start-GlitchChat {
 
     }catch{
 
-        Write-Host "[CHAT ERROR]"
+        Write-Host "[CHAT FAILED]"
 
         Write-GlitchError $_
     }
@@ -568,7 +483,7 @@ function Start-GlitchCopyCode {
 
     }catch{
 
-        Write-Host "[COPY ERROR]"
+        Write-Host "[COPYCODE FAILED]"
 
         Write-GlitchError $_
     }
@@ -591,7 +506,7 @@ function Start-GlitchReload {
 
     }catch{
 
-        Write-Host "[RELOAD ERROR]"
+        Write-Host "[RELOAD FAILED]"
 
         Write-GlitchError $_
     }
@@ -628,6 +543,61 @@ function Start-GlitchUnmute {
     Play-GlitchBeep 1200 100
 }
 
+function Start-GlitchUpdate {
+
+    param([string]$Version)
+
+    try{
+
+        if([string]::IsNullOrWhiteSpace($Version)){
+
+            Write-Host "[UPDATING TO LATEST VERSION]"
+
+            $url="https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt?t=$(Get-Random)"
+
+        }else{
+
+            Write-Host "[UPDATING TO VERSION $Version]"
+
+            $url="https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/$Version/code.txt?t=$(Get-Random)"
+        }
+
+        $temp="$env:TEMP\glitch_install.ps1"
+
+        if(Test-Path $temp){
+
+            Remove-Item `
+            $temp `
+            -Force `
+            -ErrorAction SilentlyContinue
+        }
+
+        Invoke-WebRequest `
+        -Uri $url `
+        -UseBasicParsing `
+        -OutFile $temp
+
+        if(!(Test-Path $temp)){
+
+            Write-Host "[UPDATE FILE FAILED]"
+            return
+        }
+
+        powershell `
+        -ExecutionPolicy Bypass `
+        -NoExit `
+        -File $temp
+
+        Write-Host "[UPDATED SUCCESSFULLY]"
+
+    }catch{
+
+        Write-Host "[UPDATE FAILED]"
+
+        Write-GlitchError $_
+    }
+}
+
 $runtime="$env:TEMP\glitch_runtime.ps1"
 
 if(
@@ -650,8 +620,6 @@ doskey search=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TE
 
 doskey chat=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchChat"
 
-doskey logs=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Show-GlitchErrors"
-
 doskey copycode=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchCopyCode '$*'"
 
 doskey reload=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchReload"
@@ -664,10 +632,10 @@ doskey mute=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP
 
 doskey unmute=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchUnmute"
 
+doskey update=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchUpdate '$*'"
+
 doskey download=winget install -e --id $*
 
-doskey update=powershell -ExecutionPolicy Bypass -Command "$temp=$env:TEMP + '\glitch_install.ps1'; $url='https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt?t=' + (Get-Random); Remove-Item $env:TEMP\glitch_* -Force -ErrorAction SilentlyContinue; Invoke-WebRequest -Uri $url -UseBasicParsing -OutFile $temp; powershell -ExecutionPolicy Bypass -NoExit -File $temp"
-
-doskey help=echo ai gui search chat logs copycode reload music beep mute unmute update download
+doskey help=echo ai gui search chat copycode reload music beep mute unmute update download
 
 Write-Host "SYSTEM LOADED..."
