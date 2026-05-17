@@ -3,6 +3,10 @@ $GLITCH_VERSION="1.2.5"
 $ipoopedmypants="if its not working type updateFORCE for forcing the update"
 
 $GLITCH_MODEL="qwen2:0.5b"
+#this token will not work for YOU GUYS THAT TRY TO USE THIS TOKEN WITHOU MY PERM
+$GLITCH_GITHUB_TOKEN=$env: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
+
+$GLITCH_REPO="GLITCHCOMPANY/glitch-company-cmd"
 
 $splitVersion=$GLITCH_VERSION.Split(".")
 
@@ -18,9 +22,9 @@ $global:GLITCH_SOUND=$false
 
 $global:GLITCH_CHAT_ID="GLITCH-" + (Get-Random -Minimum 1000 -Maximum 9999)
 
-$GLITCH_RANDOM_URL="https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/random"
+$GLITCH_ERROR_LOG_URL="https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/ERROR_LOGS"
 
-$GLITCH_ERROR_FILE="$env:TEMP\glitch_error_logs.txt"
+$GLITCH_RANDOM_URL="https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/random"
 
 $identity=[Security.Principal.WindowsIdentity]::GetCurrent()
 
@@ -47,14 +51,6 @@ if(-not $isAdmin){
     -ArgumentList "-ExecutionPolicy Bypass -NoExit -File `"$adminFile`""
 
     exit
-}
-
-if(!(Test-Path $GLITCH_ERROR_FILE)){
-
-    New-Item `
-    -ItemType File `
-    -Path $GLITCH_ERROR_FILE `
-    -Force | Out-Null
 }
 
 $ollamaReady=$false
@@ -115,10 +111,77 @@ function Write-GlitchError {
         $log="[$time] $ErrorMessage"
 
         Add-Content `
-        $GLITCH_ERROR_FILE `
+        "$env:TEMP\glitch_error_logs.txt" `
         $log
 
     }catch{}
+}
+
+function Publish-GlitchLogs {
+
+    try{
+
+        if([string]::IsNullOrWhiteSpace($GLITCH_GITHUB_TOKEN)){
+
+            Write-Host "[NO GITHUB TOKEN]"
+            return
+        }
+
+        $logFile="$env:TEMP\glitch_error_logs.txt"
+
+        if(!(Test-Path $logFile)){
+
+            Write-Host "[NO LOG FILE]"
+            return
+        }
+
+        $content=Get-Content $logFile -Raw
+
+        $base64=[Convert]::ToBase64String(
+            [Text.Encoding]::UTF8.GetBytes($content)
+        )
+
+        $headers=@{
+            Authorization="token $GLITCH_GITHUB_TOKEN"
+            Accept="application/vnd.github+json"
+        }
+
+        $api="https://api.github.com/repos/$GLITCH_REPO/contents/ERROR_LOGS"
+
+        try{
+
+            $old=Invoke-RestMethod `
+            -Uri $api `
+            -Headers $headers `
+            -Method Get
+
+            $sha=$old.sha
+
+        }catch{
+
+            $sha=$null
+        }
+
+        $body=@{
+            message="update error logs"
+            content=$base64
+            sha=$sha
+        } | ConvertTo-Json
+
+        Invoke-RestMethod `
+        -Uri $api `
+        -Headers $headers `
+        -Method Put `
+        -Body $body
+
+        Write-Host "[ERROR LOGS PUBLISHED]"
+
+    }catch{
+
+        Write-Host "[FAILED TO PUBLISH LOGS]"
+
+        Write-GlitchError $_
+    }
 }
 
 function Show-GlitchRandomMessage {
@@ -156,8 +219,6 @@ function Show-GlitchRandomMessage {
     }catch{
 
         Write-Host "[RANDOM MESSAGE FAILED]"
-
-        Write-GlitchError $_
     }
 }
 
@@ -218,8 +279,7 @@ beep
 mute
 unmute
 download
-logs
-clearlogs
+publishlogs
 help
 
 Always answer:
@@ -243,8 +303,6 @@ function Test-GlitchAuth {
 
         Write-Host "[ACCESS DENIED]"
 
-        Write-GlitchError "ACCESS DENIED FOR USER: $user"
-
         return $false
     }
 
@@ -262,9 +320,6 @@ function Start-GlitchAI {
         if(-not $ollamaReady){
 
             Write-Host "[OLLAMA OFFLINE]"
-
-            Write-GlitchError "OLLAMA OFFLINE"
-
             return
         }
 
@@ -287,6 +342,14 @@ function Start-GlitchGUI {
     try{
 
         Add-Type -AssemblyName System.Windows.Forms
+
+        $name=Read-Host "GUI NAME"
+
+        if($name -eq "gui_1"){
+
+            Write-Host "[SYSTEM RESERVED]"
+            return
+        }
 
         $title=Read-Host "GUI TITLE"
 
@@ -331,9 +394,6 @@ function Start-GlitchChat {
         if([string]::IsNullOrWhiteSpace($room)){
 
             Write-Host "[INVALID ROOM]"
-
-            Write-GlitchError "INVALID CHAT ROOM"
-
             return
         }
 
@@ -360,14 +420,16 @@ function Start-GlitchChat {
 
             try{
 
-                Get-Content `
+                $content=Get-Content `
                 $chatFile `
                 -ErrorAction SilentlyContinue
 
-            }catch{
+                foreach($line in $content){
 
-                Write-GlitchError $_
-            }
+                    Write-Host $line
+                }
+
+            }catch{}
 
             Write-Host ""
             Write-Host "[ENTER = REFRESH]"
@@ -414,9 +476,6 @@ function Start-GlitchCopyCode {
         if(-not $ollamaReady){
 
             Write-Host "[OLLAMA OFFLINE]"
-
-            Write-GlitchError "OLLAMA OFFLINE"
-
             return
         }
 
@@ -492,36 +551,6 @@ function Start-GlitchUnmute {
     Play-GlitchBeep 1200 100
 }
 
-function Start-GlitchLogs {
-
-    try{
-
-        notepad $GLITCH_ERROR_FILE
-
-    }catch{
-
-        Write-Host "[FAILED TO OPEN LOGS]"
-
-        Write-GlitchError $_
-    }
-}
-
-function Start-GlitchClearLogs {
-
-    try{
-
-        Clear-Content $GLITCH_ERROR_FILE
-
-        Write-Host "[LOGS CLEARED]"
-
-    }catch{
-
-        Write-Host "[FAILED TO CLEAR LOGS]"
-
-        Write-GlitchError $_
-    }
-}
-
 function Start-GlitchUpdate {
 
     param([string]$Version)
@@ -532,24 +561,13 @@ function Start-GlitchUpdate {
 
             Write-Host "[UPDATING TO LATEST VERSION]"
 
-            $api=Invoke-RestMethod `
-            -Uri "https://api.github.com/repos/GLITCHCOMPANY/glitch-company-cmd/releases/latest" `
-            -UseBasicParsing
-
-            $latest=$api.tag_name
-
-            $url="https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/$latest/code.txt?t=$(Get-Random)"
+            $url="https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt?t=$(Get-Random)"
 
         }else{
 
             Write-Host "[UPDATING TO VERSION $Version]"
 
-            if($Version -notmatch "^version"){
-
-                $Version="version$Version"
-            }
-
-            $url="https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/$Version/code.txt?t=$(Get-Random)"
+            $url="https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/releases/download/$Version/code.txt?t=$(Get-Random)"
         }
 
         $temp="$env:TEMP\glitch_install.ps1"
@@ -567,24 +585,14 @@ function Start-GlitchUpdate {
         if(!(Test-Path $temp)){
 
             Write-Host "[VERSION NOT FOUND]"
-
-            Write-GlitchError "VERSION NOT FOUND"
-
             return
         }
 
         $content=Get-Content $temp -Raw
 
-        if(
-            [string]::IsNullOrWhiteSpace($content) `
-            -or `
-            $content.Length -lt 100
-        ){
+        if($content.Length -lt 20){
 
             Write-Host "[INVALID UPDATE FILE]"
-
-            Write-GlitchError "INVALID UPDATE FILE"
-
             return
         }
 
@@ -605,20 +613,6 @@ function Start-GlitchUpdate {
     }
 }
 
-$runtime="$env:TEMP\glitch_runtime.ps1"
-
-if(
-    $MyInvocation.MyCommand.Path -ne $runtime `
-    -and `
-    (Test-Path $MyInvocation.MyCommand.Path)
-){
-
-    Copy-Item `
-    $MyInvocation.MyCommand.Path `
-    $runtime `
-    -Force
-}
-
 doskey ai=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchAI '$*'"
 
 doskey gui=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchGUI"
@@ -637,11 +631,9 @@ doskey mute=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP
 
 doskey unmute=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchUnmute"
 
-doskey logs=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchLogs"
-
-doskey clearlogs=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchClearLogs"
-
 doskey update=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchUpdate '$*'"
+
+doskey publishlogs=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Publish-GlitchLogs"
 
 doskey download=winget install -e --id $*
 
@@ -649,8 +641,8 @@ doskey updateFORCE=powershell -ExecutionPolicy Bypass -Command "$temp=$env:TEMP 
 
 doskey uninstall=reg delete "HKCU\Software\Microsoft\Command Processor" /v AutoRun /f
 
-doskey help=echo ai gui chat copycode reload music beep mute unmute logs clearlogs update download updateFORCE fool
+doskey help=echo ai gui chat copycode reload music beep mute unmute update publishlogs download tryagain
 
-doskey fool=echo $ipoopedmypants
+doskey tryagain=echo $ipoopedmypants
 
 Write-Host "SYSTEM LOADED..."
