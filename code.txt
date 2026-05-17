@@ -1,57 +1,16 @@
 $GLITCH_VERSION="1.2.5"
 
-$ipoopedmypants="if its not working type updateFORCE for forcing the update"
+$ipoopedmypants="if its not working restart the terminal"
 
 $GLITCH_MODEL="qwen2:0.5b"
-#this token will not work for YOU GUYS THAT TRY TO USE THIS TOKEN WITHOU MY PERM
-$GLITCH_GITHUB_TOKEN=$env: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
 
 $GLITCH_REPO="GLITCHCOMPANY/glitch-company-cmd"
-
-$splitVersion=$GLITCH_VERSION.Split(".")
-
-$major=[int]$splitVersion[0]
-$minor=[int]$splitVersion[1]
-$patch=[int]$splitVersion[2]
-
-$patch++
-
-$versionnext="$major.$minor.$patch"
 
 $global:GLITCH_SOUND=$false
 
 $global:GLITCH_CHAT_ID="GLITCH-" + (Get-Random -Minimum 1000 -Maximum 9999)
 
-$GLITCH_ERROR_LOG_URL="https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/ERROR_LOGS"
-
 $GLITCH_RANDOM_URL="https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/random"
-
-$identity=[Security.Principal.WindowsIdentity]::GetCurrent()
-
-$principal=New-Object Security.Principal.WindowsPrincipal($identity)
-
-$isAdmin=$principal.IsInRole(
-    [Security.Principal.WindowsBuiltInRole]::Administrator
-)
-
-if(-not $isAdmin){
-
-    Write-Host "[ADMIN REQUIRED]"
-    Write-Host "REQUESTING ELEVATION..."
-
-    $adminFile="$env:TEMP\glitch_admin.ps1"
-
-    Invoke-WebRequest `
-    "https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt?t=$(Get-Random)" `
-    -UseBasicParsing `
-    -OutFile $adminFile
-
-    Start-Process powershell `
-    -Verb RunAs `
-    -ArgumentList "-ExecutionPolicy Bypass -NoExit -File `"$adminFile`""
-
-    exit
-}
 
 $ollamaReady=$false
 
@@ -63,32 +22,11 @@ try{
 
 }catch{
 
-    Write-Host "[STARTING OLLAMA]"
-
-    Start-Process ollama "serve" -WindowStyle Hidden
-
-    for($i=0;$i -lt 15;$i++){
-
-        Start-Sleep 2
-
-        try{
-
-            ollama list | Out-Null
-
-            $ollamaReady=$true
-
-            break
-
-        }catch{}
-    }
-}
-
-if(-not $ollamaReady){
-
     Write-Host "[OLLAMA OFFLINE]"
     Write-Host "[AI DISABLED]"
+}
 
-}else{
+if($ollamaReady){
 
     $modelCheck=ollama list
 
@@ -97,90 +35,6 @@ if(-not $ollamaReady){
         Write-Host "[INSTALLING AI MODEL]"
 
         ollama pull $GLITCH_MODEL
-    }
-}
-
-function Write-GlitchError {
-
-    param($ErrorMessage)
-
-    try{
-
-        $time=Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-
-        $log="[$time] $ErrorMessage"
-
-        Add-Content `
-        "$env:TEMP\glitch_error_logs.txt" `
-        $log
-
-    }catch{}
-}
-
-function Publish-GlitchLogs {
-
-    try{
-
-        if([string]::IsNullOrWhiteSpace($GLITCH_GITHUB_TOKEN)){
-
-            Write-Host "[NO GITHUB TOKEN]"
-            return
-        }
-
-        $logFile="$env:TEMP\glitch_error_logs.txt"
-
-        if(!(Test-Path $logFile)){
-
-            Write-Host "[NO LOG FILE]"
-            return
-        }
-
-        $content=Get-Content $logFile -Raw
-
-        $base64=[Convert]::ToBase64String(
-            [Text.Encoding]::UTF8.GetBytes($content)
-        )
-
-        $headers=@{
-            Authorization="token $GLITCH_GITHUB_TOKEN"
-            Accept="application/vnd.github+json"
-        }
-
-        $api="https://api.github.com/repos/$GLITCH_REPO/contents/ERROR_LOGS"
-
-        try{
-
-            $old=Invoke-RestMethod `
-            -Uri $api `
-            -Headers $headers `
-            -Method Get
-
-            $sha=$old.sha
-
-        }catch{
-
-            $sha=$null
-        }
-
-        $body=@{
-            message="update error logs"
-            content=$base64
-            sha=$sha
-        } | ConvertTo-Json
-
-        Invoke-RestMethod `
-        -Uri $api `
-        -Headers $headers `
-        -Method Put `
-        -Body $body
-
-        Write-Host "[ERROR LOGS PUBLISHED]"
-
-    }catch{
-
-        Write-Host "[FAILED TO PUBLISH LOGS]"
-
-        Write-GlitchError $_
     }
 }
 
@@ -235,9 +89,6 @@ function Play-GlitchBeep {
     }
 }
 
-Play-GlitchBeep 900 120
-Play-GlitchBeep 1200 120
-
 Write-Host "=========================="
 Write-Host "GLITCH COMPANY CMD"
 Write-Host "VERSION $GLITCH_VERSION"
@@ -254,33 +105,10 @@ Project:
 - local AI terminal
 - Windows CMD
 - Ollama
-- GitHub auto update
 - GUI
-- terminal search engine
-- copycode
-- reload support
+- local private chat
 - sound system
-- mute system
-- admin auto elevate
-- private chat system
-- fast AI model
-- random startup messages
-- error log system
-
-Commands:
-ai
-gui
-chat
-copycode
-update
-reload
-music
-beep
-mute
-unmute
-download
-publishlogs
-help
+- clipboard system
 
 Always answer:
 - short
@@ -313,28 +141,19 @@ function Start-GlitchAI {
 
     param([string]$Prompt)
 
-    try{
-
-        if(!(Test-GlitchAuth)){ return }
-
-        if(-not $ollamaReady){
-
-            Write-Host "[OLLAMA OFFLINE]"
-            return
-        }
-
-        Play-GlitchBeep 1000 80
-
-        ollama run `
-        $GLITCH_MODEL `
-        "$GLITCH_CONTEXT User:$Prompt"
-
-    }catch{
-
-        Write-Host "[AI FAILED]"
-
-        Write-GlitchError $_
+    if(!(Test-GitHubAuth)){
+        return
     }
+
+    if(-not $ollamaReady){
+
+        Write-Host "[OLLAMA OFFLINE]"
+        return
+    }
+
+    ollama run `
+    $GLITCH_MODEL `
+    $Prompt
 }
 
 function Start-GlitchGUI {
@@ -342,14 +161,6 @@ function Start-GlitchGUI {
     try{
 
         Add-Type -AssemblyName System.Windows.Forms
-
-        $name=Read-Host "GUI NAME"
-
-        if($name -eq "gui_1"){
-
-            Write-Host "[SYSTEM RESERVED]"
-            return
-        }
 
         $title=Read-Host "GUI TITLE"
 
@@ -368,8 +179,6 @@ function Start-GlitchGUI {
     }catch{
 
         Write-Host "[GUI FAILED]"
-
-        Write-GlitchError $_
     }
 }
 
@@ -379,7 +188,7 @@ function Start-GlitchChat {
 
         if(!(Test-GlitchAuth)){ return }
 
-        $chatDir="$env:TEMP\glitch_chat"
+        $chatDir="$env:USERPROFILE\glitch_chat"
 
         if(!(Test-Path $chatDir)){
 
@@ -460,8 +269,6 @@ function Start-GlitchChat {
     }catch{
 
         Write-Host "[CHAT FAILED]"
-
-        Write-GlitchError $_
     }
 }
 
@@ -479,8 +286,6 @@ function Start-GlitchCopyCode {
             return
         }
 
-        Play-GlitchBeep 1400 100
-
         $response=ollama run `
         $GLITCH_MODEL `
         "ONLY RETURN CODE. NO EXPLANATIONS. User:$Prompt"
@@ -492,31 +297,6 @@ function Start-GlitchCopyCode {
     }catch{
 
         Write-Host "[COPYCODE FAILED]"
-
-        Write-GlitchError $_
-    }
-}
-
-function Start-GlitchReload {
-
-    try{
-
-        Play-GlitchBeep 1500 100
-
-        $reloadFile="$env:TEMP\glitch_reload.ps1"
-
-        Invoke-WebRequest `
-        "https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt?t=$(Get-Random)" `
-        -UseBasicParsing `
-        -OutFile $reloadFile
-
-        . $reloadFile
-
-    }catch{
-
-        Write-Host "[RELOAD FAILED]"
-
-        Write-GlitchError $_
     }
 }
 
@@ -551,97 +331,104 @@ function Start-GlitchUnmute {
     Play-GlitchBeep 1200 100
 }
 
-function Start-GlitchUpdate {
+function Start-GlitchSearch {
 
-    param([string]$Version)
+    param([string]$Query)
 
     try{
 
-        if([string]::IsNullOrWhiteSpace($Version)){
+        if([string]::IsNullOrWhiteSpace($Query)){
 
-            Write-Host "[UPDATING TO LATEST VERSION]"
-
-            $url="https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt?t=$(Get-Random)"
-
-        }else{
-
-            Write-Host "[UPDATING TO VERSION $Version]"
-
-            $url="https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/releases/download/$Version/code.txt?t=$(Get-Random)"
-        }
-
-        $temp="$env:TEMP\glitch_install.ps1"
-
-        Remove-Item `
-        $temp `
-        -Force `
-        -ErrorAction SilentlyContinue
-
-        Invoke-WebRequest `
-        -Uri $url `
-        -UseBasicParsing `
-        -OutFile $temp
-
-        if(!(Test-Path $temp)){
-
-            Write-Host "[VERSION NOT FOUND]"
+            Write-Host "[EMPTY SEARCH]"
             return
         }
 
-        $content=Get-Content $temp -Raw
+        $url="https://duckduckgo.com/?q=$Query"
 
-        if($content.Length -lt 20){
-
-            Write-Host "[INVALID UPDATE FILE]"
-            return
-        }
-
-        Write-Host "[INSTALLING UPDATE]"
-
-        powershell `
-        -ExecutionPolicy Bypass `
-        -NoExit `
-        -File $temp
+        Start-Process $url
 
     }catch{
 
-        Write-Host "[UPDATE FAILED]"
-
-        Write-Host $_
-
-        Write-GlitchError $_
+        Write-Host "[SEARCH FAILED]"
     }
 }
 
-doskey ai=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchAI '$*'"
+function Start-GlitchRepo {
 
-doskey gui=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchGUI"
+    try{
 
-doskey chat=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchChat"
+        $url="https://github.com/$GLITCH_REPO"
 
-doskey copycode=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchCopyCode '$*'"
+        Start-Process $url
 
-doskey reload=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchReload"
+    }catch{
 
-doskey music=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchMusic"
+        Write-Host "[FAILED TO OPEN REPO]"
+    }
+}
 
-doskey beep=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchBeep $*"
+function Test-GitHubAuth {
 
-doskey mute=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchMute"
+    $token=Read-Host "GITHUB TOKEN"
 
-doskey unmute=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchUnmute"
+    if([string]::IsNullOrWhiteSpace($token)){
 
-doskey update=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchUpdate '$*'"
+        Write-Host "[EMPTY TOKEN]"
 
-doskey publishlogs=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Publish-GlitchLogs"
+        return $false
+    }
+
+    $headers=@{
+        Authorization="token $token"
+        Accept="application/vnd.github+json"
+    }
+
+    try{
+
+        $user=Invoke-RestMethod `
+        -Uri "https://api.github.com/user" `
+        -Headers $headers
+
+        $global:GLITCH_GITHUB_USER=$user.login
+
+        Write-Host ""
+        Write-Host "[AUTH OK]"
+        Write-Host "USER: $($user.login)"
+        Write-Host ""
+
+        return $true
+
+    }catch{
+
+        Write-Host "[AUTH FAILED]"
+
+        return $false
+    }
+}
+
+doskey ai=powershell -ExecutionPolicy Bypass -Command "Start-GlitchAI '$*'"
+
+doskey gui=powershell -ExecutionPolicy Bypass -Command "Start-GlitchGUI"
+
+doskey search=powershell -ExecutionPolicy Bypass -Command "Start-GlitchSearch '$*'"
+
+doskey chat=powershell -ExecutionPolicy Bypass -Command "Start-GlitchChat"
+
+doskey copycode=powershell -ExecutionPolicy Bypass -Command "Start-GlitchCopyCode '$*'"
+
+doskey music=powershell -ExecutionPolicy Bypass -Command "Start-GlitchMusic"
+
+doskey beep=powershell -ExecutionPolicy Bypass -Command "Start-GlitchBeep 900"
+
+doskey mute=powershell -ExecutionPolicy Bypass -Command "Start-GlitchMute"
+
+doskey unmute=powershell -ExecutionPolicy Bypass -Command "Start-GlitchUnmute"
+
+doskey repo=powershell -ExecutionPolicy Bypass -Command "Start-GlitchRepo"
 
 doskey download=winget install -e --id $*
 
-doskey updateFORCE=powershell -ExecutionPolicy Bypass -Command "$temp=$env:TEMP + '\glitch_install.ps1'; $url='https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt?t=' + (Get-Random); Remove-Item $env:TEMP\glitch_* -Force -ErrorAction SilentlyContinue; Invoke-WebRequest -Uri $url -UseBasicParsing -OutFile $temp; powershell -ExecutionPolicy Bypass -NoExit -File $temp"
-
-doskey uninstall=reg delete "HKCU\Software\Microsoft\Command Processor" /v AutoRun /f
-
-doskey help=echo ai gui chat copycode reload music beep mute unmute update publishlogs download tryagain
+doskey help=echo ai gui search chat copycode music beep mute unmute repo download
 
 doskey tryagain=echo $ipoopedmypants
 
