@@ -3,9 +3,5 @@ how to install
   how to update or unistall
 (1)reg delete "HKCU\Software\Microsoft\Command Processor" /v AutoRun /f --if want to delete
   (2)powershell -ExecutionPolicy Bypass -Command "$temp=$env:TEMP + '\glitch_install.ps1'; $url='https://raw.githubusercontent.com/GLITCHCOMPANY/glitch-company-cmd/main/code.txt?t=' + (Get-Random); Remove-Item $env:TEMP\glitch_* -Force -ErrorAction SilentlyContinue; Invoke-WebRequest -Uri $url -UseBasicParsing -OutFile $temp; powershell -ExecutionPolicy Bypass -NoExit -File $temp"--for update
-NOTE:
-
-PLEASE RUN IT AS ADMIN
-
 dev log:
 how did i got 50.5 KB on random but not code.txt
