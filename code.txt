@@ -406,7 +406,14 @@ function Test-GitHubAuth {
     }
 }
 
-doskey ai=powershell -ExecutionPolicy Bypass -Command "Start-GlitchAI '$*'"
+$runtime="$env:TEMP\glitch_runtime.ps1"
+
+Copy-Item `
+$MyInvocation.MyCommand.Path `
+$runtime `
+-Force
+
+doskey ai=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$runtime'; Start-GlitchAI '$*'"
 
 doskey gui=powershell -ExecutionPolicy Bypass -Command "Start-GlitchGUI"
 
