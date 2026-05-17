@@ -413,7 +413,7 @@ $MyInvocation.MyCommand.Path `
 $runtime `
 -Force
 
-doskey ai=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$runtime'; Start-GlitchAI '$*'"
+doskey ai=powershell -ExecutionPolicy Bypass -NoProfile -Command ". '$env:TEMP\glitch_runtime.ps1'; Start-GlitchAI '$*'"
 
 doskey gui=powershell -ExecutionPolicy Bypass -Command "Start-GlitchGUI"
 
