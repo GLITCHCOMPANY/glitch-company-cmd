@@ -1,4 +1,6 @@
-$GLITCH_VERSION="1.2.1"
+$GLITCH_VERSION="1.2.2"
+
+$ipoopedmypants=π
 
 # FAST AI MODEL
 $GLITCH_MODEL="qwen2:0.5b"
@@ -639,5 +641,7 @@ doskey download=winget install -e --id $*
 doskey unistall=reg delete "HKCU\Software\Microsoft\Command Processor" /v AutoRun /f
 
 doskey help=echo ai gui search chat copycode reload music beep mute unmute update download
+
+doskey pi=echo $ipoopedmypants
 
 Write-Host "SYSTEM LOADED..."
